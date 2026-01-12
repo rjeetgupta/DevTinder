@@ -1,7 +1,3 @@
 node_modules
 ApiList.md
-controllers
-models
-routes
-services
 .env

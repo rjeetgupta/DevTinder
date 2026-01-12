@@ -6,7 +6,7 @@ import {
     loginSchema,
     changePasswordSchema,
     updateProfileSchema,
-} from "../validation/user.validation";
+} from "../validators/user.validation.js";
 import { changeUserPassword, getCurrentUser, loginUser, logoutUser, refreshAccessToken, registerUser, updateUserDetails } from "../controllers/user.controller.js";
 
 const router: Router = Router();
