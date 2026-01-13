@@ -1,239 +1,3 @@
-// import { Request, Response } from "express";
-// import { ConnectionRequest } from "../models/connection.model.js";
-// import asyncHandler from "../utils/asyncHandler.js";
-// import ApiResponse from "../utils/ApiResponse.js";
-// import ApiError from "../utils/ApiError.js";
-// import User from "../models/user.model.js";
-// import mongoose from "mongoose";
-// import { CONNECTION_STATUS } from "../constant/connection.status.js";
-
-// const PUBLIC_USE_DATA = "firstName lastName photoUrl age gender skills about";
-
-// const sendConnectionRequest = asyncHandler(
-// 	async (req: Request, res: Response) => {
-// 		const fromUserId = req.user?._id;
-// 		const toUserId = req.params.toUserId;
-// 		const status = req.params.status;
-
-// 		const allowedStatus = ["interested", "ignored"];
-// 		if (!allowedStatus.includes(status)) {
-// 			throw new ApiError(400, "Invalid status type " + status);
-// 		}
-
-// 		// Check toUserId is in my DB or not
-// 		const toUser = await User.findById(toUserId);
-// 		if (!toUser) {
-// 			throw new ApiError(404, "User does not exist");
-// 		}
-
-// 		// Check if already user A send the connection request to user B or vic-versa send to user or not.
-// 		const existingConnectionRequest = await ConnectionRequest.findOne({
-// 			$or: [
-// 				{ fromUserId, toUserId },
-// 				{ fromUserId: toUserId, toUserId: fromUserId },
-// 			],
-// 		});
-
-// 		if (existingConnectionRequest) {
-// 			throw new ApiError(400, "Connection request already exit");
-// 		}
-
-// 		const sentConnectionReq = await ConnectionRequest.create({
-// 			fromUserId,
-// 			toUserId,
-// 			status,
-// 		});
-
-// 		// TODO: Change the msg dynamically
-// 		return res
-// 			.status(200)
-// 			.json(
-// 				new ApiResponse(
-// 					200,
-// 					{ sentConnectionReq },
-// 					"Connection Request send Successfully"
-// 				)
-// 			);
-// 	}
-// );
-
-// const reviewConnectionRequest = asyncHandler(
-// 	async (req: Request, res: Response) => {
-// 	  const loggedInUser = req.user;
-// 	  const { requestId, status } = req.params;
-  
-// 	  if (!loggedInUser?._id) {
-// 		throw new ApiError(401, "Unauthorized request");
-// 	  }
-  
-// 	  // Validate status
-// 	  const allowedStatus = [
-// 		CONNECTION_STATUS.ACCEPTED,
-// 		CONNECTION_STATUS.REJECTED,
-// 	  ];
-  
-// 	  if (!allowedStatus.includes(status as any)) {
-// 		throw new ApiError(400, `Invalid status type: ${status}`);
-// 	  }
-  
-// 	  if (!mongoose.Types.ObjectId.isValid(requestId)) {
-// 		throw new ApiError(400, "Invalid request id");
-// 	  }
-  
-// 	  const connectionRequest = await ConnectionRequest.findOne({
-// 		_id: new mongoose.Types.ObjectId(requestId),
-// 		toUserId: loggedInUser._id,
-// 		status: CONNECTION_STATUS.INTERESTED,
-// 	  });
-  
-// 	  if (!connectionRequest) {
-// 		throw new ApiError(404, "Connection request not found");
-// 	  }
-  
-// 	  connectionRequest.status = status as typeof CONNECTION_STATUS.ACCEPTED;
-  
-// 	  const updatedRequest = await connectionRequest.save();
-  
-// 	  return res.status(200).json(
-// 		new ApiResponse(
-// 		  200,
-// 		  updatedRequest,
-// 		  `Connection request ${status.toLowerCase()} successfully`,
-// 		),
-// 	  );
-// 	},
-//   );
-
-// // Get all pending connection request of user
-
-// const findAllConnectionRequests = asyncHandler(
-// 	async (req: Request, res: Response) => {
-// 	  const loggedInUser = req.user;
-  
-// 	  if (!loggedInUser?._id) {
-// 		throw new ApiError(401, "Unauthorized request");
-// 	  }
-  
-// 	  const pendingRequests = await ConnectionRequest.find({
-// 		toUserId: loggedInUser._id,
-// 		status: CONNECTION_STATUS.INTERESTED,
-// 	  }).populate("fromUserId", PUBLIC_USE_DATA);
-// 	  console.log("PENDING REQUEST ", pendingRequests)
-// 	  return res.status(200).json(
-// 		new ApiResponse(
-// 		  200,
-// 		  pendingRequests,
-// 		  "Pending connection requests fetched successfully",
-// 		),
-// 	  );
-// 	},
-//   );
-
-// const findAllConnectedRequest = asyncHandler(
-// 	async (req: Request, res: Response) => {
-// 		const loggedInUser = req.user;
-
-// 		const allConnectedUser = await ConnectionRequest.find({
-// 			$or: [
-// 				{ toUserId: loggedInUser._id, status: "accepted" },
-// 				{ fromUserId: loggedInUser._id, status: "accepted" },
-// 			],
-// 		})
-// 			.populate("fromUserId", PUBLIC_USE_DATA)
-// 			.populate("toUserId", PUBLIC_USE_DATA);
-
-// 		if (!allConnectedUser) {
-// 			throw new ApiError(404, "No Connection found");
-// 		}
-
-// 		/**
-// 		 * Return the user which status are accepted but not loggedin user
-// 		 */
-
-// 		const allConnections = allConnectedUser.map((row) => {
-// 			if (row.fromUserId._id.toString() === loggedInUser._id.toString()) {
-// 				return row.toUserId;
-// 			}
-
-// 			return row.fromUserId;
-// 		});
-
-// 		return res
-// 			.status(200)
-// 			.json(
-// 				new ApiResponse(
-// 					200,
-// 					allConnections,
-// 					"All connection request fetched successfully"
-// 				)
-// 			);
-// 	}
-// );
-
-// // return all user and add the pagination for restrict the no of user to send the the frontend
-
-// /**
-//  * Loggedin user is not interested whom he is already connected, rejected and ignored
-//  */
-
-// /**
-//  * find all user which are connected to the loggedin user
-//  * USER SHOULD SEE ALL THE USER CARDS EXCEPT
-//  *      1. His on card
-//  *      2. His connection
-//  *      3. Ignored poeople
-//  *      4. Already send connection request
-//  */
-
-// // Feed API
-
-// const findAllUsersForFeed = asyncHandler(async (req: Request, res: Response) => {
-// 	const loggedInUser = req.user!;
-  
-// 	const page =
-// 	  typeof req.query.page === "string" ? parseInt(req.query.page, 10) : 1;
-  
-// 	let limit =
-// 	  typeof req.query.limit === "string" ? parseInt(req.query.limit, 10) : 10;
-  
-// 	limit = Math.min(limit, 50);
-// 	const skip = (page - 1) * limit;
-  
-// 	const connectionRequests = await ConnectionRequest.find({
-// 	  $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
-// 	}).select("fromUserId toUserId");
-  
-// 	const hideUserFromFeed = new Set<string>();
-  
-// 	connectionRequests.forEach((req) => {
-// 	  hideUserFromFeed.add(req.fromUserId.toString());
-// 	  hideUserFromFeed.add(req.toUserId.toString());
-// 	});
-  
-// 	hideUserFromFeed.add(loggedInUser._id.toString());
-  
-// 	const users = await User.find({
-// 	  _id: { $nin: Array.from(hideUserFromFeed) },
-// 	})
-// 	  .select(PUBLIC_USE_DATA)
-// 	  .skip(skip)
-// 	  .limit(limit);
-// 	console.log("USERS : ", users)
-// 	return res
-// 	  .status(200)
-// 	  .json(new ApiResponse(200, users, "Feed users fetched successfully"));
-//   });
-  
-
-// export {
-// 	sendConnectionRequest,
-// 	reviewConnectionRequest,
-// 	findAllConnectionRequests,
-// 	findAllConnectedRequest,
-// 	findAllUsersForFeed,
-// };
-
-
 import { Request, Response } from "express";
 import { ConnectionRequest } from "../models/connection.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -245,13 +9,16 @@ import { CONNECTION_STATUS } from "../constant/connection.status.js";
 
 const PUBLIC_USE_DATA = "firstName lastName photoUrl age gender skills about";
 
+/**
+ * Send Connection Request
+ * POST /connections/request/send/:status/:toUserId
+ * Purpose: Send "interested" or mark as "ignored"
+ */
 const sendConnectionRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const fromUserId = req.user?._id;
-    const { toUserId } = req.params;
-    const { status } = req.params;
+    const { toUserId, status } = req.params;
 
-    // Validate fromUserId exists
     if (!fromUserId) {
       throw new ApiError(401, "Unauthorized request");
     }
@@ -262,23 +29,18 @@ const sendConnectionRequest = asyncHandler(
       throw new ApiError(400, `Invalid status type: ${status}`);
     }
 
-    // Validate toUserId format
-    if (!mongoose.Types.ObjectId.isValid(toUserId)) {
-      throw new ApiError(400, "Invalid user ID format");
-    }
-
     // Prevent self-connection
     if (fromUserId.toString() === toUserId) {
       throw new ApiError(400, "You cannot send a connection request to yourself");
     }
 
-    // Check if toUserId exists in database
+    // Check if toUserId exists
     const toUser = await User.findById(toUserId);
     if (!toUser) {
       throw new ApiError(404, "User not found");
     }
 
-    // Check if connection request already exists (bidirectional check)
+    // Check if connection already exists (bidirectional)
     const existingConnectionRequest = await ConnectionRequest.findOne({
       $or: [
         { fromUserId, toUserId },
@@ -288,7 +50,7 @@ const sendConnectionRequest = asyncHandler(
 
     if (existingConnectionRequest) {
       throw new ApiError(
-        400, 
+        400,
         `Connection request already exists with status: ${existingConnectionRequest.status}`
       );
     }
@@ -300,12 +62,9 @@ const sendConnectionRequest = asyncHandler(
       status,
     });
 
-    // Populate user data for better response
-    await sentConnectionReq.populate("toUserId", PUBLIC_USE_DATA);
-
-    const message = 
-      status === CONNECTION_STATUS.INTERESTED 
-        ? "Connection request sent successfully" 
+    const message =
+      status === CONNECTION_STATUS.INTERESTED
+        ? "Connection request sent successfully"
         : "User ignored successfully";
 
     return res.status(201).json(
@@ -314,19 +73,18 @@ const sendConnectionRequest = asyncHandler(
   }
 );
 
+/**
+ * Review Connection Request
+ * POST /connections/request/review/:status/:requestId
+ * Purpose: Accept or reject a pending request
+ */
 const reviewConnectionRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const loggedInUser = req.user;
     const { requestId, status } = req.params;
 
-    // Validate user authentication
     if (!loggedInUser?._id) {
       throw new ApiError(401, "Unauthorized request");
-    }
-
-    // Validate request ID format
-    if (!mongoose.Types.ObjectId.isValid(requestId)) {
-      throw new ApiError(400, "Invalid request ID format");
     }
 
     // Validate status
@@ -339,7 +97,8 @@ const reviewConnectionRequest = asyncHandler(
       throw new ApiError(400, `Invalid status type: ${status}`);
     }
 
-    // Find the connection request with all validations in one query
+    // Find the connection request
+    // IMPORTANT: Only requests sent TO you with status "interested"
     const connectionRequest = await ConnectionRequest.findOne({
       _id: requestId,
       toUserId: loggedInUser._id,
@@ -348,7 +107,7 @@ const reviewConnectionRequest = asyncHandler(
 
     if (!connectionRequest) {
       throw new ApiError(
-        404, 
+        404,
         "Connection request not found or you are not authorized to review it"
       );
     }
@@ -357,7 +116,7 @@ const reviewConnectionRequest = asyncHandler(
     connectionRequest.status = status as typeof CONNECTION_STATUS.ACCEPTED;
     const updatedRequest = await connectionRequest.save();
 
-    // Populate both users for complete response
+    // Populate both users
     await updatedRequest.populate("fromUserId", PUBLIC_USE_DATA);
     await updatedRequest.populate("toUserId", PUBLIC_USE_DATA);
 
@@ -371,6 +130,11 @@ const reviewConnectionRequest = asyncHandler(
   }
 );
 
+/**
+ * Get Pending Requests (Received)
+ * GET /connections/request/pending
+ * Purpose: Get all requests sent TO you that are pending (status: "interested")
+ */
 const findAllConnectionRequests = asyncHandler(
   async (req: Request, res: Response) => {
     const loggedInUser = req.user;
@@ -379,13 +143,14 @@ const findAllConnectionRequests = asyncHandler(
       throw new ApiError(401, "Unauthorized request");
     }
 
-    // Find all pending requests sent to the logged-in user
+    // Find requests where YOU are the receiver (toUserId)
+    // and status is "interested" (pending)
     const pendingRequests = await ConnectionRequest.find({
       toUserId: loggedInUser._id,
       status: CONNECTION_STATUS.INTERESTED,
     })
       .populate("fromUserId", PUBLIC_USE_DATA)
-      .sort({ createdAt: -1 }); // Show newest first
+      .sort({ createdAt: -1 });
 
     return res.status(200).json(
       new ApiResponse(
@@ -394,7 +159,7 @@ const findAllConnectionRequests = asyncHandler(
           requests: pendingRequests,
           count: pendingRequests.length,
         },
-        pendingRequests.length > 0 
+        pendingRequests.length > 0
           ? "Pending connection requests fetched successfully"
           : "No pending connection requests"
       )
@@ -402,7 +167,12 @@ const findAllConnectionRequests = asyncHandler(
   }
 );
 
-const findAllConnectedRequest = asyncHandler(
+/**
+ * Get All Connections (Accepted)
+ * GET /connections
+ * Purpose: Get all accepted connections (where you're either sender or receiver)
+ */
+const findAllConnectedUsers = asyncHandler(
   async (req: Request, res: Response) => {
     const loggedInUser = req.user;
 
@@ -410,8 +180,8 @@ const findAllConnectedRequest = asyncHandler(
       throw new ApiError(401, "Unauthorized request");
     }
 
-    // Find all accepted connections (bidirectional)
-    const allConnectedUser = await ConnectionRequest.find({
+    // Find all accepted connections where you're involved
+    const allConnectedRequests = await ConnectionRequest.find({
       $or: [
         { toUserId: loggedInUser._id, status: CONNECTION_STATUS.ACCEPTED },
         { fromUserId: loggedInUser._id, status: CONNECTION_STATUS.ACCEPTED },
@@ -419,13 +189,16 @@ const findAllConnectedRequest = asyncHandler(
     })
       .populate("fromUserId", PUBLIC_USE_DATA)
       .populate("toUserId", PUBLIC_USE_DATA)
-      .sort({ updatedAt: -1 }); // Show recently accepted first
+      .sort({ updatedAt: -1 });
 
-    // Extract the connected users (not the logged-in user)
-    const allConnections = allConnectedUser.map((row) => {
+    // Extract the OTHER user (not the logged-in user)
+    // FIXED: Check the populated documents, not just IDs
+    const allConnections = allConnectedRequests.map((row) => {
+      // If I am the sender (fromUserId), return the receiver (toUserId)
       if (row.fromUserId._id.toString() === loggedInUser._id.toString()) {
         return row.toUserId;
       }
+      // If I am the receiver (toUserId), return the sender (fromUserId)
       return row.fromUserId;
     });
 
@@ -444,6 +217,11 @@ const findAllConnectedRequest = asyncHandler(
   }
 );
 
+/**
+ * Get Feed Users
+ * GET /connections/feed
+ * Purpose: Get users you haven't interacted with yet
+ */
 const findAllUsersForFeed = asyncHandler(
   async (req: Request, res: Response) => {
     const loggedInUser = req.user!;
@@ -452,7 +230,7 @@ const findAllUsersForFeed = asyncHandler(
       throw new ApiError(401, "Unauthorized request");
     }
 
-    // Parse and validate pagination parameters
+    // Parse pagination
     const page = Math.max(
       1,
       typeof req.query.page === "string" ? parseInt(req.query.page, 10) : 1
@@ -463,10 +241,10 @@ const findAllUsersForFeed = asyncHandler(
       typeof req.query.limit === "string" ? parseInt(req.query.limit, 10) : 10
     );
 
-    limit = Math.min(limit, 50); // Cap at 50 users per page
+    limit = Math.min(limit, 50);
     const skip = (page - 1) * limit;
 
-    // Find all connection requests involving the logged-in user
+    // Find all connection requests involving you
     const connectionRequests = await ConnectionRequest.find({
       $or: [
         { fromUserId: loggedInUser._id },
@@ -474,7 +252,7 @@ const findAllUsersForFeed = asyncHandler(
       ],
     }).select("fromUserId toUserId");
 
-    // Build set of user IDs to hide from feed
+    // Build set of user IDs to hide
     const hideUserFromFeed = new Set<string>();
 
     connectionRequests.forEach((req) => {
@@ -482,24 +260,24 @@ const findAllUsersForFeed = asyncHandler(
       hideUserFromFeed.add(req.toUserId.toString());
     });
 
-    // Also hide the logged-in user
+    // Also hide yourself
     hideUserFromFeed.add(loggedInUser._id.toString());
 
-    // Get total count for pagination metadata
+    // Count total available users
     const totalUsers = await User.countDocuments({
       _id: { $nin: Array.from(hideUserFromFeed) },
     });
 
-    // Fetch users for feed
+    // Fetch users
     const users = await User.find({
       _id: { $nin: Array.from(hideUserFromFeed) },
     })
       .select(PUBLIC_USE_DATA)
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 }); // Show newer users first
+      .sort({ createdAt: -1 });
 
-    // Calculate pagination metadata
+    // Calculate pagination
     const totalPages = Math.ceil(totalUsers / limit);
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
@@ -518,7 +296,7 @@ const findAllUsersForFeed = asyncHandler(
             hasPrevPage,
           },
         },
-        users.length > 0 
+        users.length > 0
           ? "Feed users fetched successfully"
           : "No more users available"
       )
@@ -530,6 +308,6 @@ export {
   sendConnectionRequest,
   reviewConnectionRequest,
   findAllConnectionRequests,
-  findAllConnectedRequest,
+  findAllConnectedUsers,
   findAllUsersForFeed,
 };
