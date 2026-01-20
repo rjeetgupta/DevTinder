@@ -27,12 +27,13 @@ app.use(cookieParser());
 // import all routes
 import userRoutes from "./routes/user.route.js";
 import connectionRoutes from "./routes/connection.route.js";
-
+import paymentRoutes from "./routes/payment.route.js";
 
 
 // Routes
 app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/connections", connectionRoutes)
+app.use("/api/v1/connections", connectionRoutes);
+app.use("/api/v1/payment", paymentRoutes);
 
 // Health check
 app.get("/health", (_, res) => {
