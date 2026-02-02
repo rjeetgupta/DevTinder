@@ -4,14 +4,13 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
 import User from "../models/user.model.js";
-import mongoose from "mongoose";
 import { CONNECTION_STATUS } from "../constant/connection.status.js";
 
 const PUBLIC_USE_DATA = "firstName lastName photoUrl age gender skills about";
 
 /**
  * Send Connection Request
- * POST /connections/request/send/:status/:toUserId
+ * POST /api/v1/request/send/:status/:toUserId
  * Purpose: Send "interested" or mark as "ignored"
  */
 const sendConnectionRequest = asyncHandler(
@@ -56,7 +55,7 @@ const sendConnectionRequest = asyncHandler(
     }
 
     // Create new connection request
-    const sentConnectionReq = await ConnectionRequest.create({
+    const connectionRequest = await ConnectionRequest.create({
       fromUserId,
       toUserId,
       status,
@@ -68,14 +67,14 @@ const sendConnectionRequest = asyncHandler(
         : "User ignored successfully";
 
     return res.status(201).json(
-      new ApiResponse(201, sentConnectionReq, message)
+      new ApiResponse(201, connectionRequest, message)
     );
   }
 );
 
 /**
  * Review Connection Request
- * POST /connections/request/review/:status/:requestId
+ * POST /api/v1/request/review/:status/:requestId
  * Purpose: Accept or reject a pending request
  */
 const reviewConnectionRequest = asyncHandler(
@@ -114,16 +113,15 @@ const reviewConnectionRequest = asyncHandler(
 
     // Update status
     connectionRequest.status = status as typeof CONNECTION_STATUS.ACCEPTED;
-    const updatedRequest = await connectionRequest.save();
+    const updatedConnectionRequest = await connectionRequest.save();
 
     // Populate both users
-    await updatedRequest.populate("fromUserId", PUBLIC_USE_DATA);
-    await updatedRequest.populate("toUserId", PUBLIC_USE_DATA);
+    await updatedConnectionRequest.populate("fromUserId", PUBLIC_USE_DATA);
 
     return res.status(200).json(
       new ApiResponse(
         200,
-        updatedRequest,
+        updatedConnectionRequest,
         `Connection request ${status.toLowerCase()} successfully`
       )
     );
@@ -131,11 +129,11 @@ const reviewConnectionRequest = asyncHandler(
 );
 
 /**
- * Get Pending Requests (Received)
- * GET /connections/request/pending
+ * Get Received Connection Requests (Pending)
+ * GET /api/v1/request/received
  * Purpose: Get all requests sent TO you that are pending (status: "interested")
  */
-const findAllConnectionRequests = asyncHandler(
+const getReceivedRequests = asyncHandler(
   async (req: Request, res: Response) => {
     const loggedInUser = req.user;
 
@@ -145,7 +143,7 @@ const findAllConnectionRequests = asyncHandler(
 
     // Find requests where YOU are the receiver (toUserId)
     // and status is "interested" (pending)
-    const pendingRequests = await ConnectionRequest.find({
+    const receivedRequests = await ConnectionRequest.find({
       toUserId: loggedInUser._id,
       status: CONNECTION_STATUS.INTERESTED,
     })
@@ -155,24 +153,53 @@ const findAllConnectionRequests = asyncHandler(
     return res.status(200).json(
       new ApiResponse(
         200,
-        {
-          requests: pendingRequests,
-          count: pendingRequests.length,
-        },
-        pendingRequests.length > 0
-          ? "Pending connection requests fetched successfully"
-          : "No pending connection requests"
+        receivedRequests,
+        receivedRequests.length > 0
+          ? "Received connection requests fetched successfully"
+          : "No received connection requests"
       )
     );
   }
 );
 
 /**
- * Get All Connections (Accepted)
- * GET /connections
+ * Get Sent Connection Requests
+ * GET /api/v1/request/sent
+ * Purpose: Get all requests sent BY you
+ */
+const getSentRequests = asyncHandler(
+  async (req: Request, res: Response) => {
+    const loggedInUser = req.user;
+    console.log("SENT REQUEST HIT")
+    if (!loggedInUser?._id) {
+      throw new ApiError(401, "Unauthorized request");
+    }
+
+    // Find requests where YOU are the sender (fromUserId)
+    const sentRequests = await ConnectionRequest.find({
+      fromUserId: loggedInUser._id,
+    })
+      .populate("toUserId", PUBLIC_USE_DATA)
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        sentRequests,
+        sentRequests.length > 0
+          ? "Sent connection requests fetched successfully"
+          : "No sent connection requests"
+      )
+    );
+  }
+);
+
+/**
+ * Get All Matches (Accepted Connections)
+ * GET /api/v1/user/connections
  * Purpose: Get all accepted connections (where you're either sender or receiver)
  */
-const findAllConnectedUsers = asyncHandler(
+const getMatches = asyncHandler(
   async (req: Request, res: Response) => {
     const loggedInUser = req.user;
 
@@ -181,37 +208,22 @@ const findAllConnectedUsers = asyncHandler(
     }
 
     // Find all accepted connections where you're involved
-    const allConnectedRequests = await ConnectionRequest.find({
+    const matches = await ConnectionRequest.find({
       $or: [
         { toUserId: loggedInUser._id, status: CONNECTION_STATUS.ACCEPTED },
         { fromUserId: loggedInUser._id, status: CONNECTION_STATUS.ACCEPTED },
       ],
     })
       .populate("fromUserId", PUBLIC_USE_DATA)
-      .populate("toUserId", PUBLIC_USE_DATA)
       .sort({ updatedAt: -1 });
-
-    // Extract the OTHER user (not the logged-in user)
-    // FIXED: Check the populated documents, not just IDs
-    const allConnections = allConnectedRequests.map((row) => {
-      // If I am the sender (fromUserId), return the receiver (toUserId)
-      if (row.fromUserId._id.toString() === loggedInUser._id.toString()) {
-        return row.toUserId;
-      }
-      // If I am the receiver (toUserId), return the sender (fromUserId)
-      return row.fromUserId;
-    });
 
     return res.status(200).json(
       new ApiResponse(
         200,
-        {
-          connections: allConnections,
-          count: allConnections.length,
-        },
-        allConnections.length > 0
-          ? "Connections fetched successfully"
-          : "No connections found"
+        matches,
+        matches.length > 0
+          ? "Matches fetched successfully"
+          : "No matches found"
       )
     );
   }
@@ -219,10 +231,10 @@ const findAllConnectedUsers = asyncHandler(
 
 /**
  * Get Feed Users
- * GET /connections/feed
+ * GET /api/v1/user/feed
  * Purpose: Get users you haven't interacted with yet
  */
-const findAllUsersForFeed = asyncHandler(
+const getFeedUsers = asyncHandler(
   async (req: Request, res: Response) => {
     const loggedInUser = req.user!;
 
@@ -307,7 +319,8 @@ const findAllUsersForFeed = asyncHandler(
 export {
   sendConnectionRequest,
   reviewConnectionRequest,
-  findAllConnectionRequests,
-  findAllConnectedUsers,
-  findAllUsersForFeed,
+  getReceivedRequests,
+  getSentRequests,
+  getMatches,
+  getFeedUsers,
 };

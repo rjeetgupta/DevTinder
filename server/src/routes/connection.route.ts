@@ -3,9 +3,10 @@ import verifyJWT from "../middlewares/auth.middleware";
 import {
   sendConnectionRequest,
   reviewConnectionRequest,
-  findAllConnectionRequests,
-  findAllUsersForFeed,
-  findAllConnectedUsers,
+  getFeedUsers,
+  getMatches,
+  getReceivedRequests,
+  getSentRequests,
 } from "../controllers/connection.controller.js";
 import {
   validateObjectId,
@@ -58,8 +59,19 @@ router.route("/request/review/:status/:requestId").post(
  * @access  Private
  */
 router.route("/request/pending").get(
-  findAllConnectionRequests
+  verifyJWT,
+  getReceivedRequests
 );
+
+/**
+ * @route   GET /api/v1/connections/request/sent
+ * @desc    Get all pending connection requests for the logged-in user
+ * @access  Private
+ */
+router.route("/request/sent").get(
+  verifyJWT,
+  getSentRequests
+)
 
 /**
  * @route   GET /api/v1/connections
@@ -68,7 +80,7 @@ router.route("/request/pending").get(
  */
 router.route("/").get(
   verifyJWT,
-  findAllConnectedUsers
+  getMatches
 );
 
 /**
@@ -81,7 +93,7 @@ router.route("/").get(
 router.route("/feed").get(
   verifyJWT,
   validatePagination,
-  findAllUsersForFeed
+  getFeedUsers
 );
 
 export default router;

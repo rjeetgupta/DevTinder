@@ -2,6 +2,7 @@ import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { IUser } from "../types/user.types";
+import { SubscriptionTier } from "../utils/constant";
 
 const userSchema = new Schema<IUser>(
     {
@@ -41,6 +42,27 @@ const userSchema = new Schema<IUser>(
             type: String,
             enum: ["male", "female", "other"],
         },
+
+        isPremium: {
+            type: Boolean,
+            default: false,
+        },
+
+        subscriptionTier: {
+            type: String,
+            enum: SubscriptionTier,
+            default: SubscriptionTier.FREE,
+        },
+
+        membershipValidity: {
+            type: Date,
+            default: null,
+        },
+
+        isProfileVerified: {
+            type: Boolean,
+            default: false
+        },          
 
         about: {
             type: String,

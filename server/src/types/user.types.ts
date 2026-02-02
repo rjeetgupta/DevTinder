@@ -1,4 +1,5 @@
 import { Document } from "mongoose";
+import { SubscriptionTier } from "../utils/constant";
 
 export interface IUser extends Document {
     firstName: string;
@@ -13,6 +14,11 @@ export interface IUser extends Document {
     about?: string;
     skills?: string[];
     refreshToken?: string;
+
+    isPremium: boolean;
+    subscriptionTier: SubscriptionTier;
+    membershipValidity?: Date | null;
+    isProfileVerified?: boolean;
 
     comparePassword(candidatePassword: string): Promise<boolean>;
     generateAccessToken(): string;

@@ -31,7 +31,7 @@ import paymentRoutes from "./routes/payment.route.js";
 
 
 // Routes
-app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/connections", connectionRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 
