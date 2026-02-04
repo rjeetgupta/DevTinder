@@ -52,7 +52,7 @@ function Login({ className }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-6 max-w-md mx-auto mt-8 p-8 shadow-sm",
+        "flex flex-col gap-6 max-w-md mx-auto my-14 p-8 shadow-sm rounded-2xl mt-32 border border-neutral-300",
         className
       )}
     >

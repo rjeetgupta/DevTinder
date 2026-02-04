@@ -40,10 +40,10 @@ function Register({ className }: React.ComponentProps<"div">) {
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      firstName: "Ranjeet",
+      firstName: "",
       lastName: "",
-      email: "ranjeet@gmail.com",
-      password: "Ranjeet@123",
+      email: "",
+      password: "",
     },
   });
 
@@ -58,7 +58,7 @@ function Register({ className }: React.ComponentProps<"div">) {
   };
 
   return (
-    <div className={cn("max-w-md mx-auto mt-8 shadow-md p-6", className)}>
+    <div className={cn("max-w-md mx-auto my-12 mt-32 shadow-md p-6 rounded-2xl border border-neutral-200", className)}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <h1 className="text-xl font-bold text-center">
