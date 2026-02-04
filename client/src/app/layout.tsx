@@ -31,9 +31,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Navigation />
-        <div className="m-4">
+        <main className="pt-8 min-h-screen">
           {children}
-        </div>
+        </main>
         <Toaster position="top-right" richColors/>
         <Footer />
       </body>
