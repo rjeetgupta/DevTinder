@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'motion/react';
 import { X, Heart, MapPin, Star } from 'lucide-react';
 import { useConnections } from '@/store/appStore';
-import { User } from '@/types/user.types';
+
 
 export default function SwipeInterface() {
 
@@ -133,7 +133,7 @@ export default function SwipeInterface() {
         )}
 
         {/* Card Stack */}
-        <div className="relative h-[600px] mb-8">
+        <div className="relative ml-14 h-[450px] w-[350px] mb-4">
           {/* Next card preview */}
           {feedUsers[currentIndex + 1] && (
             <div className="absolute inset-0 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 scale-95 opacity-50" />
@@ -148,7 +148,7 @@ export default function SwipeInterface() {
             className="absolute inset-0 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 overflow-hidden cursor-grab active:cursor-grabbing shadow-xl"
           >
             {/* Profile Image */}
-            <div className="relative h-72 bg-linear-to-br from-violet-500 to-pink-500">
+            <div className="relative h-52 bg-linear-to-br from-violet-500 to-pink-500">
               <img
                 src={currentProfile.photoUrl}
                 alt={currentProfile.firstName}
@@ -179,7 +179,7 @@ export default function SwipeInterface() {
               </div>
 
               {/* About */}
-              {currentProfile.about && currentProfile.about !== 'Write about yourself' && (
+              {currentProfile.about && (
                 <p className="text-zinc-700 dark:text-zinc-300 mb-4 line-clamp-3">
                   {currentProfile.about}
                 </p>
@@ -217,7 +217,7 @@ export default function SwipeInterface() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleReject}
-            className="w-16 h-16 rounded-full bg-white dark:bg-zinc-900 border-2 border-red-500 flex items-center justify-center shadow-lg hover:shadow-red-500/50 transition-shadow"
+            className="w-10 h-10 rounded-full bg-white dark:bg-zinc-900 border-2 border-red-500 flex items-center justify-center shadow-lg hover:shadow-red-500/50 transition-shadow"
           >
             <X className="w-8 h-8 text-red-500" />
           </motion.button>
@@ -225,7 +225,7 @@ export default function SwipeInterface() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleLike}
-            className="w-16 h-16 rounded-full bg-violet-600 flex items-center justify-center shadow-lg hover:shadow-violet-500/50 transition-shadow"
+            className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center shadow-lg hover:shadow-violet-500/50 transition-shadow"
           >
             <Heart className="w-8 h-8 text-white fill-current" />
           </motion.button>

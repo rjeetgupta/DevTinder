@@ -168,7 +168,7 @@ function ReceivedRequestCard({ request, onAccept, onReject }: any) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 hover:border-violet-500 transition-all"
+      className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 hover:border-violet-500 transition-all w-md"
     >
       <div className="flex items-start gap-4">
         <div className="w-16 h-16 rounded-full overflow-hidden bg-linear-to-br from-violet-500 to-pink-500 shrink-0">
