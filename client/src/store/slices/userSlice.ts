@@ -7,6 +7,7 @@ export interface UserSlice {
   profiles: User[];
   isLoadingProfiles: boolean;
   profileError: string | null;
+  currentUser: User | null;
 
   // Actions
   fetchCurrentUser: () => Promise<void>;
@@ -26,6 +27,7 @@ export const createUserSlice: StateCreator<
   profiles: [],
   isLoadingProfiles: false,
   profileError: null,
+  currentUser: null,
 
   // Fetch current user
   fetchCurrentUser: async () => {
@@ -34,6 +36,7 @@ export const createUserSlice: StateCreator<
       
       // Update user in auth slice (if you have access to other slices)
       // For now, just return the user
+      set({ currentUser: user.data })
       return user as any;
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Failed to fetch user';

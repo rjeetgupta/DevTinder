@@ -62,6 +62,7 @@ export const useProfiles = () =>
         fetchProfiles: state.fetchProfiles,
         updateProfile: state.updateProfile,
         uploadProfilePhoto: state.uploadProfilePhoto,
+        fetchCurrentUser: state.fetchCurrentUser
       })
     )
   );
