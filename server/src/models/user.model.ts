@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 import validator from "validator";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import jwt, { SignOptions } from "jsonwebtoken";
 import { IUser } from "../types/user.types";
 
 
@@ -235,30 +235,44 @@ userSchema.methods.comparePassword = async function (
 };
 
 // Generate Access Token
-userSchema.methods.generateAccessToken = function (): string {
-    return jwt.sign(
-        {
-            _id: this._id.toString(),
-            email: this.email,
-        },
-        process.env.ACCESS_TOKEN_SECRET! as string,
-        {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "15m",
-        }
-    );
+userSchema.methods.generateAccessToken = function (this: IUser): string {
+    const secret = process.env.ACCESS_TOKEN_SECRET;
+    if (!secret) {
+        throw new Error("ACCESS_TOKEN_SECRET is not defined");
+    }
+
+    const expiresIn = process.env.ACCESS_TOKEN_EXPIRY || "15m";
+
+    const payload = {
+        _id: this._id.toString(),
+        email: this.email,
+    };
+
+    const options: SignOptions = {
+        expiresIn: expiresIn as SignOptions["expiresIn"],
+    };
+
+    return jwt.sign(payload, secret, options);
 };
 
 // Generate Refresh Token
-userSchema.methods.generateRefreshToken = function (): string {
-    return jwt.sign(
-        {
-            _id: this._id.toString(),
-        },
-        process.env.REFRESH_TOKEN_SECRET as string,
-        {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "7d",
-        }
-    );
+userSchema.methods.generateRefreshToken = function (this: IUser): string {
+    const secret = process.env.REFRESH_TOKEN_SECRET;
+    if (!secret) {
+        throw new Error("REFRESH_TOKEN_SECRET is not defined");
+    }
+
+    const expiresIn = process.env.REFRESH_TOKEN_EXPIRY || "7d";
+
+    const payload = {
+        _id: this._id.toString(),
+    };
+
+    const options: SignOptions = {
+        expiresIn: expiresIn as SignOptions["expiresIn"],
+    };
+
+    return jwt.sign(payload, secret, options);
 };
 
 // Export model
