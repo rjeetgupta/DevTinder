@@ -1,53 +1,78 @@
-import { Schema, model } from "mongoose";
-import { SubscriptionTier } from "../utils/constant"; 
+import { Schema, model, Document, Types } from "mongoose";
 
-const paymentSchema = new Schema({
-    orderId: {
-      type: String,
-      required: true,
-      index: true,
-    },
+export interface IPayment extends Document {
+  userId: Types.ObjectId;
+  orderId: string;
+  paymentId?: string;
+  amount: number;
+  currency: string;
 
-    paymentId: {
-      type: String,
-      default: null,
-    },
+  notes: {
+    firstName?: string;
+    lastName?: string;
+    emailId?: string;
+    memberShipType?: string;
+  };
 
+  status: "created" | "pending" | "success" | "failed";
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const paymentSchema = new Schema<IPayment>(
+  {
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
-    subscriptionTier: {
+    orderId: {
       type: String,
-      enum: Object.values(SubscriptionTier),
       required: true,
+      trim: true,
+    },
+
+    paymentId: {
+      type: String,
+      trim: true,
     },
 
     amount: {
       type: Number,
       required: true,
+      min: 1,
     },
 
     currency: {
       type: String,
-      default: "INR",
+      required: true,
+      uppercase: true,
+    },
+
+    notes: {
+      firstName: String,
+      lastName: String,
+      emailId: String,
+      memberShipType: String,
     },
 
     status: {
       type: String,
-      enum: ["created", "authorized", "captured", "failed"],
       required: true,
+      enum: ["created", "pending", "success", "failed"],
       default: "created",
-    },
-
-    receipt: {
-      type: String,
     },
   },
   { timestamps: true }
 );
 
-const Payment = model("Payment", paymentSchema);
+
+paymentSchema.index({ userId: 1 });
+paymentSchema.index({ orderId: 1 }, { unique: true });
+paymentSchema.index({ status: 1 });
+
+
+const Payment = model<IPayment>("Payment", paymentSchema);
 export default Payment;

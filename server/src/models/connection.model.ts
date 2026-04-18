@@ -1,37 +1,61 @@
-import mongoose, { Schema } from "mongoose";
-import { IConnection } from "../types/connection.types";
-import ApiError from "../utils/ApiError";
+import { Schema, model, Document, Types } from "mongoose";
 
-const connectionSchema = new Schema<IConnection>({
-    fromUserId: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-    },
-    toUserId: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-    },
-    status: {
-        type: String,
-        required: true,
-        enum: {
-            values: ["ignored", "accepted", "rejected", "interested"],
-            message: `{VALUES} is incorrect status types`
+export interface IConnectionRequest extends Document {
+    fromUserId: Types.ObjectId;
+    toUserId: Types.ObjectId;
+    status: "ignored" | "interested" | "accepted" | "rejected";
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+const connectionRequestSchema = new Schema<IConnectionRequest>(
+    {
+        fromUserId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
         },
-        default: "interested",
+
+        toUserId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
+
+        status: {
+            type: String,
+            enum: {
+                values: ["ignored", "interested", "accepted", "rejected"],
+                message: `{VALUE} is incorrect status type`,
+            },
+            default: "interested",
+        },
+    },
+    { timestamps: true }
+);
+
+connectionRequestSchema.index(
+    { fromUserId: 1, toUserId: 1 },
+    { unique: true }
+);
+
+// Fast queries (incoming / outgoing requests)
+connectionRequestSchema.index({ toUserId: 1 });
+connectionRequestSchema.index({ fromUserId: 1 });
+
+connectionRequestSchema.pre(
+    "save",
+    function (this: IConnectionRequest, next) {
+        if (this.fromUserId.equals(this.toUserId)) {
+            return next(
+                new Error("Cannot send connection request to yourself")
+            );
+        }
+        next();
     }
-}, { timestamps: true })
+);
 
-// Compound index
-connectionSchema.index({ fromUserId: 1, toUserId: 1 })
-
-connectionSchema.pre("save", function (next) {
-    if (this.toUserId.equals(this.fromUserId)) {
-        throw new ApiError(400, "You can not send the connection request yourself")
-    }
-    next();
-})
-
-export const ConnectionRequest = mongoose.model<IConnection>("ConnectionRequest", connectionSchema);
+export const ConnectionRequest = model<IConnectionRequest>(
+    "ConnectionRequest",
+    connectionRequestSchema
+);
