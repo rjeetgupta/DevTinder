@@ -1,18 +1,16 @@
-import express, { Router } from "express";
+import { Router } from "express";
 
 import verifyJWT from "../middlewares/auth.middleware";
 import {
-    createMembershipOrder,
-    razorpayWebhook,
-    verifyMembershipStatus,
+    createPayment,
+    handleWebhook,
+    verifyPremium
 } from "../controllers/payment.controller";
 
 const router: Router = Router();
 
-router.route("/create-order").post(verifyJWT, createMembershipOrder);
-router
-    .route("/webhook")
-    .post(express.raw({ type: "application/json" }), razorpayWebhook);
-router.route("/verify").get(verifyJWT, verifyMembershipStatus);
+router.route("/payment/create").post(verifyJWT, createPayment);
+router.route("/payment/webhook").post(handleWebhook);
+router.route("/payment/premium/verify").post(verifyJWT, verifyPremium);
 
 export default router;

@@ -1,152 +1,185 @@
+// controllers/payment.controller.ts
+
 import { Request, Response } from "express";
-import asyncHandler from "../utils/asyncHandler";
-import ApiResponse from "../utils/ApiResponse";
-import ApiError from "../utils/ApiError";
+import Razorpay from "razorpay";
+import razorpayInstance from "../utils/razorpay";
 import Payment from "../models/payment.model";
 import User from "../models/user.model";
-import razorpayInstance from "../utils/razorpay";
-import { SubscriptionPlans, SubscriptionTier } from "../utils/constant";
+import { memberAmount, MembershipType } from "../utils/constant";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
+import { IUser } from "../types/user.types";
 
-export const createMembershipOrder = asyncHandler(async (req: Request, res: Response) => {
-    const { subscriptionTier } = req.body as {
-        subscriptionTier: SubscriptionTier;
-    };
-      
-    const user = req.user;
+interface AuthRequest extends Request {
+    user: IUser;
+}
 
-    // Validate tier
-    const plan = SubscriptionPlans[subscriptionTier];
-    if (!Object.values(SubscriptionTier).includes(subscriptionTier)) {
-        throw new ApiError(400, "Invalid subscription tier");
-    }  
+type PaymentNotes = {
+    firstName: string;
+    lastName: string;
+    email: string;
+    memberShipType: MembershipType;
+};
 
-    // Create Razorpay order
-    const order = await razorpayInstance.orders.create({
-        amount: plan.price * 100, // in paise
-        currency: "INR",
-        receipt: `membership_${Date.now()}`,
-        notes: {
-            userId: user._id.toString(),
-            subscriptionTier,
-        },
-    });
+export const createPayment = async (
+    req: Request,
+    res: Response
+) => {
+    try {
+        console.log("Payment request received");
 
-    // Save payment record
-    const payment = await Payment.create({
-        userId: user._id,
-        orderId: order.id,
-        subscriptionTier,
-        amount: order.amount,
-        currency: order.currency,
-        status: "created",
-        receipt: order.receipt,
-    });
+        const { memberShipType } = req.body as {
+            memberShipType: MembershipType;
+        };
 
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            payment,
-            "Order created successfully"
-        )
-    );
-},
-);
+        // Validate membership type
+        if (!memberAmount[memberShipType]) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid membership type",
+            });
+        }
 
-// Razorpay Webhook
+        const { _id, firstName, email } = req.user;
 
-export const razorpayWebhook = asyncHandler(
-    async (req: Request, res: Response) => {
-        const signature = req.headers["x-razorpay-signature"] as string;
+        const order = await razorpayInstance.orders.create({
+            amount: memberAmount[memberShipType] * 100,
+            currency: "INR",
+            receipt: `receipt_${Date.now()}`,
+            notes: {
+                firstName,
+                email,
+                memberShipType,
+            },
+        });
 
-        // Verify webhook signature
+        const payment = new Payment({
+            userId: _id,
+            orderId: order.id,
+            amount: order.amount,
+            currency: order.currency,
+            notes: order.notes,
+            status: order.status,
+            memberShipType,
+        });
+
+        const savedPayment = await payment.save();
+
+        res.status(201).json({
+            success: true,
+            ...savedPayment.toJSON(),
+            keyId: process.env.RAZORPAY_KEY_ID,
+        });
+    } catch (error: any) {
+        console.error("Create Payment Error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+
+export const handleWebhook = async (
+    req: Request,
+    res: Response
+) => {
+    try {
+        const signature = req.get("x-razorpay-signature") as string;
+
+        const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+        if (!secret) {
+            throw new Error("Webhook secret not defined");
+        }
+
         const isValid = validateWebhookSignature(
             JSON.stringify(req.body),
             signature,
-            process.env.RAZORPAY_WEBHOOK_SECRET!,
+            secret
         );
 
         if (!isValid) {
-            throw new ApiError(400, "Invalid webhook signature");
+            return res.status(400).json({
+                success: false,
+                message: "Invalid signature",
+            });
         }
 
-        // Only handle successful payments
-        if (req.body.event !== "payment.captured") {
-            return res.status(200).json(new ApiResponse(200, "Event ignored"));
-        }
+        const paymentDetails = req.body.payload.payment.entity;
 
-        const paymentEntity = req.body.payload.payment.entity;
-
-        // Find payment record
-        const payment = await Payment.findOne({
-            orderId: paymentEntity.order_id,
+        const paymentRecord = await Payment.findOne({
+            orderId: paymentDetails.order_id,
         });
 
-        if (!payment) {
-            throw new ApiError(404, "Payment not found");
+        if (!paymentRecord) {
+            return res.status(404).json({
+                success: false,
+                message: "Payment record not found",
+            });
         }
 
         // Update payment status
-        payment.paymentId = paymentEntity.id;
-        payment.status = "captured";
-        await payment.save();
+        paymentRecord.status = paymentDetails.status;
+        await paymentRecord.save();
 
-        // Find user
-        const user = await User.findById(payment.userId);
-        if (!user) {
-            throw new ApiError(404, "User not found");
+        // Typed notes
+        const notes = paymentRecord.notes as PaymentNotes;
+
+        // Upgrade user
+        const user = await User.findById(paymentRecord.userId);
+
+        if (user) {
+            user.isPremium = true;
+            user.memberShipType = notes.memberShipType;
+            await user.save();
         }
 
-        // Get plan details
-        const plan = SubscriptionPlans[payment.subscriptionTier];
-
-        // Calculate validity
-        const now = new Date();
-        const baseDate =
-            user.membershipValidity && user.membershipValidity > now
-                ? user.membershipValidity
-                : now;
-
-        // Activate membership
-        user.isPremium = true;
-        user.subscriptionTier = payment.subscriptionTier;
-        user.membershipValidity = new Date(
-            baseDate.getTime() + plan.validityDays * 24 * 60 * 60 * 1000,
-        );
-
-        // GOLD users → profile verified
-        if (payment.subscriptionTier === SubscriptionTier.GOLD) {
-            user.isProfileVerified = true;
+        // Logs
+        if (req.body.event === "payment.captured") {
+            console.log("Payment captured:", paymentDetails.order_id);
         }
 
-        await user.save();
+        if (req.body.event === "payment.failed") {
+            console.log("Payment failed:", paymentDetails.order_id);
+        }
 
-        return res
-            .status(200)
-            .json(new ApiResponse(200, "Membership activated"));
-    },
-);
+        res.status(200).json({
+            success: true,
+            message: "Webhook processed successfully",
+        });
+    } catch (error: any) {
+        console.error("Webhook Error:", error);
+        res.status(400).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
 
-// Verify Membership (Frontend)
-
-export const verifyMembershipStatus = asyncHandler(
-    async (req: Request, res: Response) => {
+export const verifyPremium = async (
+    req: Request,
+    res: Response
+) => {
+    try {
         const user = req.user;
 
-        const isActive =
-            user.isPremium &&
-            user.membershipValidity &&
-            user.membershipValidity > new Date();
+        if (user.isPremium) {
+            return res.status(200).json({
+                success: true,
+                isPremium: true,
+                memberShipType: user.memberShipType,
+                user,
+            });
+        }
 
-        return res.status(200).json(
-            new ApiResponse(200, {
-                isPremium: isActive,
-                subscriptionTier: isActive
-                    ? user.subscriptionTier
-                    : SubscriptionTier.FREE,
-                validTill: user.membershipValidity,
-                profileVerified: user.profileVerified,
-            }),
-        );
-    },
-);
+        return res.status(200).json({
+            success: true,
+            isPremium: false,
+            user,
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
