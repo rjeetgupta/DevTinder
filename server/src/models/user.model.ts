@@ -1,116 +1,234 @@
 import { Schema, model } from "mongoose";
+import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { IUser } from "../types/user.types";
-import { SubscriptionTier } from "../utils/constant";
 
-const userSchema = new Schema<IUser>(
+
+const userSchema: Schema<IUser> = new Schema(
     {
+        /* ---------- Basic Info ---------- */
         firstName: {
             type: String,
-            required: [true, "First name is required"],
+            required: true,
             trim: true,
-            maxlength: [50, "First name cannot exceed 50 characters"],
+            minlength: 2,
+            maxlength: 50,
         },
 
         lastName: {
             type: String,
             trim: true,
-            maxlength: [50, "Last name cannot exceed 50 characters"],
+            maxlength: 50,
+        },
+
+        uniqueId: {
+            type: String,
+            unique: true,
+            trim: true,
         },
 
         email: {
             type: String,
-            lowercase: true,
-            required: [true, "Email is required"],
-            trim: true,
+            required: true,
             unique: true,
-            match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
+            lowercase: true,
+            trim: true,
+            validate: {
+                validator: (value: string) => validator.isEmail(value),
+                message: "Invalid email address",
+            },
         },
 
         password: {
             type: String,
-            required: [true, "Password is required"],
-            minlength: [8, "Password must be at least 8 characters"],
+            required: true,
+            validate: {
+                validator: (value: string) =>
+                    validator.isStrongPassword(value),
+                message: "Enter a strong password",
+            },
         },
 
+        /* ---------- Auth ---------- */
+        emailVerified: {
+            type: Boolean,
+            default: false
+        },
+        lastLoginAt: {
+            type: Date
+        },
+        loginAttempts: {
+            type: Number,
+            default: 0
+        },
+        lockUntil: {
+            type: Date
+        },
+
+        /* ---------- Profile ---------- */
         age: {
             type: Number,
+            min: 18,
+            max: 60
         },
 
         gender: {
             type: String,
-            enum: ["male", "female", "other"],
+            enum: ["male", "female", "others"],
         },
 
-        isPremium: {
-            type: Boolean,
-            default: false,
-        },
-
-        subscriptionTier: {
+        bio: {
             type: String,
-            enum: SubscriptionTier,
-            default: SubscriptionTier.FREE,
+            maxlength: 3000
         },
 
-        membershipValidity: {
-            type: Date,
+        experienceLevel: {
+            type: String,
+            enum: ["fresher", "junior", "mid", "senior"],
+            default: "fresher",
+        },
+
+        location: {
+            city: { type: String },
+            state: { type: String },
+            country: { type: String, default: "India" },
+        },
+
+        photoUrl: {
+            type: String,
+            default:
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYCZ0qae7TaC6iuCJf6WzgV97HR0rMLm8N5A&s",
+            validate: {
+                validator: (value: string): boolean => validator.isURL(value),
+                message: "Invalid photo URL",
+            },
+        },
+
+        /* ---------- Skills ---------- */
+        skills: {
+            type: [String],
+            validate: {
+                validator: (value: string[]) => value.length <= 25,
+                message: "Maximum 25 skills allowed",
+            },
+        },
+
+        /* ---------- Social Links ---------- */
+        githubUrl: {
+            type: String,
+            trim: true,
+            validate: {
+                validator: (v: string) => !v || validator.isURL(v),
+                message: "Invalid GitHub URL",
+            },
+        },
+
+        linkedinUrl: {
+            type: String,
+            trim: true,
+            validate: {
+                validator: (v: string) => !v || validator.isURL(v),
+                message: "Invalid LinkedIn URL",
+            },
+        },
+
+        twitterUrl: {
+            type: String,
+            trim: true,
+            validate: {
+                validator: (v: string) => !v || validator.isURL(v),
+                message: "Invalid Twitter URL",
+            },
+        },
+
+        portfolioUrl: {
+            type: String,
+            trim: true,
+            validate: {
+                validator: (v: string) => !v || validator.isURL(v),
+                message: "Invalid Portfolio URL",
+            },
+        },
+
+        /* ---------- App Control ---------- */
+        profileCompletion: {
+            type: Number,
+            default: 0,
+            min: 0,
+            max: 100
+        },
+        isProfileComplete: {
+            type: Boolean,
+            default: false
+        },
+        isBlocked: {
+            type: Boolean,
+            default: false
+        },
+
+        /* ---------- Status ---------- */
+        status: {
+            type: Number,
+            enum: [1, -1],
+            default: 1,
+            index: true,
+        },
+
+        isPremium: { type: Boolean, default: false },
+
+        memberShipType: {
+            type: String,
+            enum: ["silver", "gold", null],
             default: null,
         },
 
-        isProfileVerified: {
-            type: Boolean,
-            default: false
-        },          
-
-        about: {
+        resetPasswordToken: {
             type: String,
-            default: "Write about yourself",
+            default: null
         },
-
-        city: {
-            type: String,
-            trim: true,
-            maxlength: 100,
-        },
-         
-        photoUrl: {
-            type: String,
-            default: "https://www.freepik.com/free-vector/user-blue-gradient_145856969.htm#fromView=keyword&page=1&position=0&uuid=f5f902f7-6393-4a0c-9cb2-89684689f6f7&query=User",
-        },
-          
-        dateOfBirth: {
+        resetPasswordExpires: {
             type: Date,
+            default: null
         },
-          
-        skills: {
-            type: [String],
-            default: [],
-        },
-
         refreshToken: {
             type: String,
             select: false,
         },
     },
-    {
-        timestamps: true,
-    }
+    { timestamps: true }
 );
 
-// Index for faster search
+/* ---------- Indexes ---------- */
 userSchema.index({ firstName: 1, lastName: 1 });
+userSchema.index({ gender: 1 });
+userSchema.index({ skills: 1 });
+userSchema.index({ "location.city": 1 });
+
 
 // Hash password before save
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function (this: IUser, next) {
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });
 
+userSchema.pre("save", function (this: IUser, next) {
+    if (this.isNew || !this.uniqueId) {
+        const namePart = this.firstName.toLowerCase().replace(/\s+/g, "");
+        const specialChars = "@#$&_";
+        const randomSpecial =
+            specialChars[Math.floor(Math.random() * specialChars.length)];
+        const randomSuffix = Math.random().toString(36).substring(2, 5);
+
+        this.uniqueId = `${namePart}${randomSpecial}${randomSuffix}`;
+    }
+    next();
+});
+
 // Compare password
 userSchema.methods.comparePassword = async function (
+    this: IUser,
     password: string
 ): Promise<boolean> {
     return bcrypt.compare(password, this.password);
