@@ -105,11 +105,13 @@ const logoutUser = asyncHandler(async (req: Request, res: Response) => {
 
 // Get Current User
 const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
-    const user = req.user;
+    const userId = req.user?._id;
 
-    if (!user) {
+    if (!userId) {
         throw new ApiError(401, "Unauthorized");
     }
+
+    const user = await User.findById(userId);
 
     res.status(200).json(new ApiResponse(200, user, "Profile fetched successfully"));
 });
