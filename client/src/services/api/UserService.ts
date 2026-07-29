@@ -1,13 +1,15 @@
 import { apiClient } from "./ApiClient";
-import { userSchema, userListSchema, type User } from "@/types";
+import { userSchema, userListSchema, type User, type UserLocation } from "@/types";
 
 export interface EditProfilePayload {
   firstName: string;
   lastName?: string;
   age?: number | null;
   gender?: string | null;
-  about?: string | null;
+  bio: string;
+  experienceLevel?: string | null;
   skills?: string[];
+  location?: UserLocation;
   photo?: File;
   githubUrl?: string | null;
   linkedinUrl?: string | null;
@@ -27,16 +29,28 @@ export class UserService {
 
   async editProfile(payload: EditProfilePayload): Promise<User> {
     const formData = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-      if (value === undefined || value === null) return;
-      if (key === "photo" && value instanceof File) {
-        formData.append("photo", value);
-      } else if (key === "skills" && Array.isArray(value)) {
-        value.forEach((skill) => formData.append("skills", skill));
-      } else {
-        formData.append(key, String(value));
-      }
-    });
+
+    formData.append("firstName", payload.firstName);
+    if (payload.lastName) formData.append("lastName", payload.lastName);
+    if (payload.age) formData.append("age", String(payload.age));
+    if (payload.gender) formData.append("gender", payload.gender);
+    formData.append("bio", payload.bio);
+    if (payload.experienceLevel) formData.append("experienceLevel", payload.experienceLevel);
+
+    // Backend expects these two JSON-stringified, matching the original client.
+    formData.append("skills", JSON.stringify(payload.skills ?? []));
+    if (payload.location) {
+      formData.append("location", JSON.stringify(payload.location));
+    }
+
+    if (payload.githubUrl) formData.append("githubUrl", payload.githubUrl);
+    if (payload.linkedinUrl) formData.append("linkedinUrl", payload.linkedinUrl);
+    if (payload.twitterUrl) formData.append("twitterUrl", payload.twitterUrl);
+    if (payload.portfolioUrl) formData.append("portfolioUrl", payload.portfolioUrl);
+
+    if (payload.photo instanceof File) {
+      formData.append("photo", payload.photo);
+    }
 
     const res = await apiClient.post("/profile/edit", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -66,7 +80,7 @@ export class UserService {
 
   async isConnected(targetUserId: string): Promise<boolean> {
     const res = await apiClient.get(`/user/is-connected/${targetUserId}`);
-    return Boolean(res.data.data ?? res.data);
+    return Boolean(res.data.isConnected);
   }
 }
 

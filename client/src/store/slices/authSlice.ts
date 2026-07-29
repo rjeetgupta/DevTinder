@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/tool
 
 import { extractErrorMessage } from "@/services/api/ApiClient";
 import { authService, type LoginPayload, type SignupPayload } from "@/services/api/AuthService";
+import { userService, type EditProfilePayload } from "@/services/api/UserService";
 import type { User } from "@/types";
 
 interface AuthState {
@@ -66,6 +67,17 @@ export const bootstrapAuth = createAsyncThunk<User | null>(
   }
 );
 
+export const editProfile = createAsyncThunk<User, EditProfilePayload, { rejectValue: string }>(
+  "auth/editProfile",
+  async (payload, { rejectWithValue }) => {
+    try {
+      return await userService.editProfile(payload);
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error, "Could not update your profile."));
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -120,6 +132,18 @@ const authSlice = createSlice({
       .addCase(bootstrapAuth.rejected, (state) => {
         state.user = null;
         state.isBootstrapping = false;
+      })
+      .addCase(editProfile.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(editProfile.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.user = action.payload;
+      })
+      .addCase(editProfile.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload ?? "Update failed.";
       });
   },
 });

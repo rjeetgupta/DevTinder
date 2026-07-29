@@ -2,8 +2,18 @@ import { z } from "zod";
 
 import { userSchema } from "./user";
 
-/** Status values the backend accepts for `/request/send/:status/:id` and `/request/review/:status/:id`. */
-export const requestStatusSchema = z.enum(["interested", "ignored", "accepted", "rejected"]);
+/**
+ * Status values the backend accepts. Note `"intrested"` is a pre-existing
+ * typo in the backend's `/request/send/:status/:id` route — kept as-is
+ * since "fixing" it here would break real requests.
+ */
+export const sendStatusSchema = z.enum(["intrested", "ignored"]);
+export type SendStatus = z.infer<typeof sendStatusSchema>;
+
+export const reviewStatusSchema = z.enum(["accepted", "rejected"]);
+export type ReviewStatus = z.infer<typeof reviewStatusSchema>;
+
+export const requestStatusSchema = z.enum(["intrested", "ignored", "accepted", "rejected"]);
 export type RequestStatus = z.infer<typeof requestStatusSchema>;
 
 /**

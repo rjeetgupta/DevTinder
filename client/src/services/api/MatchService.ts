@@ -3,7 +3,8 @@ import {
   connectionRequestListSchema,
   userListSchema,
   type ConnectionRequest,
-  type RequestStatus,
+  type ReviewStatus,
+  type SendStatus,
   type User,
 } from "@/types";
 
@@ -12,18 +13,15 @@ import {
  * ignored requests, resending, and the accepted-connections list.
  */
 export class MatchService {
-  async sendRequest(status: Extract<RequestStatus, "interested" | "ignored">, toUserId: string): Promise<void> {
+  async sendRequest(status: SendStatus, toUserId: string): Promise<void> {
     await apiClient.post(`/request/send/${status}/${toUserId}`);
   }
 
-  async reviewRequest(
-    status: Extract<RequestStatus, "accepted" | "rejected">,
-    requestId: string
-  ): Promise<void> {
+  async reviewRequest(status: ReviewStatus, requestId: string): Promise<void> {
     await apiClient.post(`/request/review/${status}/${requestId}`);
   }
 
-  async resendRequest(status: RequestStatus, toUserId: string): Promise<void> {
+  async resendRequest(status: SendStatus, toUserId: string): Promise<void> {
     await apiClient.post(`/user/resend-request/send/${status}/${toUserId}`);
   }
 
