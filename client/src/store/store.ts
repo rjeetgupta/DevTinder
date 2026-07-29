@@ -1,14 +1,19 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
 import authReducer from "./slices/authSlice";
+import connectionReducer from "./slices/connectionSlice";
+import feedReducer from "./slices/feedSlice";
+import requestReducer from "./slices/requestSlice";
 
 /**
- * Feature slices are added here one module at a time (feed, requests,
- * connections, chat, premium land in their own modules). `authReducer`
- * comes in now because the 401 -> logout flow needs somewhere to dispatch.
+ * Feature slices are added here one module at a time (chat, premium
+ * land in their own modules).
  */
 const rootReducer = combineReducers({
   auth: authReducer,
+  feed: feedReducer,
+  requests: requestReducer,
+  connections: connectionReducer,
 });
 
 export const makeStore = () => {
