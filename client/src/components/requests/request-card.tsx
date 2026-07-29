@@ -26,11 +26,11 @@ export function RequestCard({ request }: { request: ConnectionRequest }) {
   const initials = `${fromUser.firstName?.[0] ?? ""}${fromUser.lastName?.[0] ?? ""}`.toUpperCase() || "?";
   const skillNames = skillIdsToNames(fromUser.skills ?? []);
 
-  const handleReview = async (status: "accepeted" | "rejected") => {
+  const handleReview = async (status: "accepted" | "rejected") => {
     const result = await dispatch(reviewRequest({ requestId: request._id, status }));
     if (reviewRequest.fulfilled.match(result)) {
       setDetailsOpen(false);
-      toast.success(status === "accepeted" ? "Connection accepted!" : "Request rejected");
+      toast.success(status === "accepted" ? "Connection accepted!" : "Request rejected");
     } else {
       toast.error((result.payload as string) ?? "Could not review this request.");
     }
@@ -82,7 +82,7 @@ export function RequestCard({ request }: { request: ConnectionRequest }) {
           className="flex shrink-0 flex-col gap-2 sm:flex-row"
           onClick={(e) => e.stopPropagation()}
         >
-          <Button size="sm" disabled={isPending} onClick={() => handleReview("accepeted")}>
+          <Button size="sm" disabled={isPending} onClick={() => handleReview("accepted")}>
             {isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
             Accept
           </Button>
@@ -112,7 +112,7 @@ export function RequestCard({ request }: { request: ConnectionRequest }) {
               {isPending ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
               Reject
             </Button>
-            <Button disabled={isPending} onClick={() => handleReview("accepeted")}>
+            <Button disabled={isPending} onClick={() => handleReview("accepted")}>
               {isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Accept
             </Button>
