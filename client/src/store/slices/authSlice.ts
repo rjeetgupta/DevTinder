@@ -3,6 +3,7 @@ import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/tool
 import { extractErrorMessage } from "@/services/api/ApiClient";
 import { authService, type LoginPayload, type SignupPayload } from "@/services/api/AuthService";
 import { userService, type EditProfilePayload } from "@/services/api/UserService";
+import { socketService } from "@/services/socket/SocketService";
 import type { User } from "@/types";
 
 interface AuthState {
@@ -51,6 +52,8 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
       // Even if the backend call fails, the client-side session should
       // still clear — so we don't reject here, just log for visibility.
       console.error("Logout request failed:", extractErrorMessage(error));
+    } finally {
+      socketService.disconnect();
     }
   }
 );

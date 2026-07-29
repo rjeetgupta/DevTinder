@@ -4,16 +4,15 @@ import authReducer from "./slices/authSlice";
 import connectionReducer from "./slices/connectionSlice";
 import feedReducer from "./slices/feedSlice";
 import requestReducer from "./slices/requestSlice";
+import chatReducer from "./slices/chatSlice"
 
-/**
- * Feature slices are added here one module at a time (chat, premium
- * land in their own modules).
- */
+
 const rootReducer = combineReducers({
   auth: authReducer,
   feed: feedReducer,
   requests: requestReducer,
   connections: connectionReducer,
+  chat: chatReducer,
 });
 
 export const makeStore = () => {
