@@ -1,25 +1,17 @@
 import { apiClient } from "./ApiClient";
-
-export interface CreateOrderPayload {
-  membershipType: string;
-}
-
-export interface CreateOrderResponse {
-  orderId: string;
-  amount: number;
-  currency: string;
-  keyId: string;
-}
+import { createOrderResponseSchema, type CreateOrderResponse, type MembershipType } from "@/types";
 
 export class PaymentService {
-  async createOrder(payload: CreateOrderPayload): Promise<CreateOrderResponse> {
-    const res = await apiClient.post("/payment/create", payload);
-    return res.data.data ?? res.data;
+  /** Backend expects `memberShipType` (capital S — matches the pre-existing typo elsewhere). */
+  async createOrder(membershipType: MembershipType): Promise<CreateOrderResponse> {
+    const res = await apiClient.post("/payment/create", { memberShipType: membershipType });
+    return createOrderResponseSchema.parse(res.data);
   }
 
-  async verifyPremium(): Promise<{ isPremium: boolean; membershipType?: string }> {
-    const res = await apiClient.get("/payment/premium/verify");
-    return res.data.data ?? res.data;
+  /** Also a POST, and returns `{ isPremium }` directly (no `data` wrapper). */
+  async verifyPremium(): Promise<boolean> {
+    const res = await apiClient.post("/payment/premium/verify", {});
+    return Boolean(res.data.isPremium);
   }
 }
 

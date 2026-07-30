@@ -4,7 +4,9 @@ import authReducer from "./slices/authSlice";
 import connectionReducer from "./slices/connectionSlice";
 import feedReducer from "./slices/feedSlice";
 import requestReducer from "./slices/requestSlice";
-import chatReducer from "./slices/chatSlice"
+import chatReducer from "./slices/chatSlice";
+import premiumReducer from "./slices/premiumSlice";
+import aiReducer from "./slices/aiSlice";
 
 
 const rootReducer = combineReducers({
@@ -13,6 +15,8 @@ const rootReducer = combineReducers({
   requests: requestReducer,
   connections: connectionReducer,
   chat: chatReducer,
+  premium: premiumReducer,
+  aiReducer: aiReducer,
 });
 
 export const makeStore = () => {

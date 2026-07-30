@@ -22,6 +22,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
     <AppShell
       activeHref={pathname}
       userName={user?.firstName}
+      userPhoto={user?.photo}
       onLogout={handleLogout}
     >
       {children}

@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, LogOut, Search, Settings, UserRound } from "lucide-react";
+import Link from "next/link";
+import { Bell, LogOut, UserRound } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage, AvatarStatus } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -11,21 +12,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 
 export function Topbar({
   userName = "You",
+  userPhoto,
   unreadCount = 0,
+  onLogout,
 }: {
   userName?: string;
+  userPhoto?: string | null;
   unreadCount?: number;
+  onLogout?: () => void;
 }) {
   return (
-    <header className="glass flex h-16 shrink-0 items-center gap-4 rounded-xl px-4">
-      <div className="relative w-full max-w-sm">
-        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-        <Input placeholder="Search developers…" className="pl-9" />
-      </div>
+    <header className="glass flex h-16 shrink-0 items-center justify-between gap-4 rounded-xl px-4">
+      <span className="text-h3 hidden sm:block">DevTinder</span>
 
       <div className="ml-auto flex items-center gap-3">
         <button
@@ -45,24 +46,26 @@ export function Topbar({
         </button>
 
         <DropdownMenu>
-          <DropdownMenuTrigger className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <DropdownMenuTrigger
+            className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Account menu"
+          >
             <div className="relative">
               <Avatar>
-                <AvatarImage src="" alt={userName} />
+                <AvatarImage src={userPhoto ?? undefined} alt={userName} />
                 <AvatarFallback>{userName.slice(0, 1).toUpperCase()}</AvatarFallback>
               </Avatar>
               <AvatarStatus online />
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              <UserRound /> Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings /> Settings
+            <DropdownMenuItem asChild>
+              <Link href="/profile">
+                <UserRound /> Profile
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive">
+            <DropdownMenuItem variant="destructive" onSelect={onLogout}>
               <LogOut /> Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -22,8 +22,16 @@ export function ConnectionCard({ connection }: { connection: User }) {
   return (
     <>
       <Card
-        className="cursor-pointer flex-row items-center gap-4 p-4"
+        role="button"
+        tabIndex={0}
         onClick={() => setDetailsOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setDetailsOpen(true);
+          }
+        }}
+        className="cursor-pointer flex-row items-center gap-4 p-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <Avatar
           className={`size-16 shrink-0 ring-2 ring-offset-2 ring-offset-transparent ${

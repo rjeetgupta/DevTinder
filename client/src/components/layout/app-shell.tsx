@@ -1,24 +1,37 @@
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 
 export function AppShell({
   activeHref,
   userName,
+  userPhoto,
   unreadCount,
+  onLogout,
   children,
 }: {
   activeHref?: string;
   userName?: string;
+  userPhoto?: string | null;
   unreadCount?: number;
+  onLogout?: () => void;
   children: React.ReactNode;
 }) {
   return (
     <div className="mx-auto flex h-screen max-w-7xl gap-4 p-4">
       <Sidebar activeHref={activeHref} />
       <div className="flex min-w-0 flex-1 flex-col gap-4">
-        <Topbar userName={userName} unreadCount={unreadCount} />
-        <main className="min-h-0 flex-1 overflow-y-auto rounded-xl">{children}</main>
+        <Topbar
+          userName={userName}
+          userPhoto={userPhoto}
+          unreadCount={unreadCount}
+          onLogout={onLogout}
+        />
+        <main className="min-h-0 flex-1 overflow-y-auto rounded-xl pb-20 md:pb-0">
+          {children}
+        </main>
       </div>
+      <MobileNav activeHref={activeHref} />
     </div>
   );
 }

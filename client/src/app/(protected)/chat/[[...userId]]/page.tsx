@@ -5,12 +5,14 @@ import { MessageSquareText } from "lucide-react";
 
 import { ChatList } from "@/components/chat/chat-list";
 import { ChatWindow } from "@/components/chat/chat-window";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 export default function ChatPage({
   params,
 }: {
   params: Promise<{ userId?: string[] }>;
 }) {
+  useDocumentTitle("Chat");
   const { userId } = use(params);
   const activeUserId = userId?.[0];
 

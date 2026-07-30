@@ -70,6 +70,22 @@ export const bootstrapAuth = createAsyncThunk<User | null>(
   }
 );
 
+/**
+ * Re-fetches the current user without touching `isBootstrapping` — used
+ * after actions elsewhere (e.g. a verified premium purchase) that change
+ * server-side user fields the client needs to reflect immediately.
+ */
+export const refreshCurrentUser = createAsyncThunk<User | null>(
+  "auth/refresh",
+  async () => {
+    try {
+      return await authService.fetchCurrentUser();
+    } catch {
+      return null;
+    }
+  }
+);
+
 export const editProfile = createAsyncThunk<User, EditProfilePayload, { rejectValue: string }>(
   "auth/editProfile",
   async (payload, { rejectWithValue }) => {
@@ -135,6 +151,9 @@ const authSlice = createSlice({
       .addCase(bootstrapAuth.rejected, (state) => {
         state.user = null;
         state.isBootstrapping = false;
+      })
+      .addCase(refreshCurrentUser.fulfilled, (state, action) => {
+        if (action.payload) state.user = action.payload;
       })
       .addCase(editProfile.pending, (state) => {
         state.status = "loading";

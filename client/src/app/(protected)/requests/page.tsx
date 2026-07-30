@@ -8,6 +8,7 @@ import { RequestCard } from "@/components/requests/request-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchIgnoredUsers, fetchReceivedRequests } from "@/store/slices/requestSlice";
 
@@ -42,6 +43,7 @@ function EmptyState({ icon: Icon, title, description }: {
 }
 
 export default function RequestsPage() {
+  useDocumentTitle("Requests");
   const dispatch = useAppDispatch();
   const { received, receivedStatus, receivedError, ignored, ignoredStatus, ignoredError } =
     useAppSelector((state) => state.requests);

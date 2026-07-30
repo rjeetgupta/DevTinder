@@ -6,6 +6,7 @@ import { Users2 } from "lucide-react";
 import { ConnectionCard } from "@/components/connections/connection-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchConnections } from "@/store/slices/connectionSlice";
 
@@ -26,6 +27,7 @@ function ListSkeleton() {
 }
 
 export default function ConnectionsPage() {
+  useDocumentTitle("Connections");
   const dispatch = useAppDispatch();
   const { connections, status, error } = useAppSelector((state) => state.connections);
 
