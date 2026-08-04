@@ -18,7 +18,7 @@ import { login, signup } from "@/store/slices/authSlice";
 interface FormValues {
   firstName?: string;
   lastName?: string;
-  emailId: string;
+  email: string;
   password: string;
 }
 
@@ -46,11 +46,11 @@ export function AuthForm() {
 
   const onSubmit = async (data: FormValues) => {
     const action = isLoginMode
-      ? login({ emailId: data.emailId, password: data.password })
+      ? login({ email: data.email, password: data.password })
       : signup({
           firstName: data.firstName ?? "",
           lastName: data.lastName,
-          emailId: data.emailId,
+          email: data.email,
           password: data.password,
         });
 
@@ -83,14 +83,9 @@ export function AuthForm() {
       )}
 
       <div className="grid gap-1.5">
-        <Label htmlFor="emailId">Email</Label>
-        <Input
-          id="emailId"
-          type="email"
-          autoComplete="email"
-          {...register("emailId")}
-        />
-        {errors.emailId && <p className="text-destructive text-xs">{errors.emailId.message}</p>}
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" type="email" autoComplete="email" {...register("email")} />
+        {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
       </div>
 
       <div className="grid gap-1.5">

@@ -20,7 +20,7 @@ export const userSchema = z.object({
   uniqueId: z.string().nullable().optional(),
   firstName: z.string(),
   lastName: z.string().nullable().optional(),
-  emailId: z.string().email(),
+  email: z.string().email(),
   age: z.number().nullable().optional(),
   gender: z.string().nullable().optional(),
   photo: z.string().nullable().optional(),

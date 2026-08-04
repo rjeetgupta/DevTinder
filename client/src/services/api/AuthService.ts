@@ -2,15 +2,34 @@ import { apiClient } from "./ApiClient";
 import { userSchema, type User } from "@/types";
 
 export interface LoginPayload {
-  emailId: string;
+  email: string;
   password: string;
 }
 
 export interface SignupPayload {
   firstName: string;
   lastName?: string;
-  emailId: string;
+  email: string;
   password: string;
+}
+
+/**
+ * Extracts the user object from a `{ data: { loggedInUser: {...} } }`
+ * style envelope. Falls back to a couple of alternate key names in case
+ * signup/other endpoints label the nested object differently (e.g.
+ * `registeredUser`) — makes parsing resilient without guessing wrong
+ * and throwing.
+ */
+function unwrapUser(responseData: unknown): unknown {
+  if (responseData && typeof responseData === "object" && "data" in responseData) {
+    const inner = (responseData as { data: unknown }).data;
+    if (inner && typeof inner === "object") {
+      const obj = inner as Record<string, unknown>;
+      return obj.loggedInUser ?? obj.registeredUser ?? obj.user ?? inner;
+    }
+    return inner;
+  }
+  return responseData;
 }
 
 /**
@@ -19,31 +38,31 @@ export interface SignupPayload {
  */
 export class AuthService {
   async login(payload: LoginPayload): Promise<User> {
-    const res = await apiClient.post("/login", payload);
-    return userSchema.parse(res.data.data);
+    const res = await apiClient.post("/auth/login", payload);
+    return userSchema.parse(unwrapUser(res.data));
   }
 
   async signup(payload: SignupPayload): Promise<User> {
-    const res = await apiClient.post("/signup", payload);
-    return userSchema.parse(res.data.data);
+    const res = await apiClient.post("/auth/register", payload);
+    return userSchema.parse(unwrapUser(res.data));
   }
 
   async logout(): Promise<void> {
-    await apiClient.post("/logout", {});
+    await apiClient.post("/auth/logout", {});
   }
 
-  async forgotPassword(emailId: string): Promise<void> {
-    await apiClient.post("/forgot-password", { emailId });
+  async forgotPassword(email: string): Promise<void> {
+    await apiClient.post("/auth/forgot-password", { email });
   }
 
   async resetPassword(token: string, password: string): Promise<void> {
-    await apiClient.post(`/reset-password/${token}`, { password });
+    await apiClient.post(`/auth/reset-password/${token}`, { password });
   }
 
   /** Fetches the currently authenticated user, used to hydrate auth state on app load. */
   async fetchCurrentUser(): Promise<User> {
-    const res = await apiClient.get("/profile/view");
-    return userSchema.parse(res.data.data ?? res.data);
+    const res = await apiClient.get("/auth/profile");
+    return userSchema.parse(unwrapUser(res.data));
   }
 }
 

@@ -59,7 +59,7 @@ export class UserService {
   }
 
   async getFeed(): Promise<User[]> {
-    const res = await apiClient.get("/user/feed");
+    const res = await apiClient.get("/connections/feed");
     return userListSchema.parse(res.data.data ?? res.data);
   }
 
@@ -79,7 +79,7 @@ export class UserService {
   }
 
   async isConnected(targetUserId: string): Promise<boolean> {
-    const res = await apiClient.get(`/user/is-connected/${targetUserId}`);
+    const res = await apiClient.get(`/connections/is-connected/${targetUserId}`);
     return Boolean(res.data.isConnected);
   }
 }

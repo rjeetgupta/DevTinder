@@ -9,8 +9,8 @@ import {
 
 const router: Router = Router();
 
-router.route("/payment/create").post(verifyJWT, createPayment);
-router.route("/payment/webhook").post(handleWebhook);
-router.route("/payment/premium/verify").post(verifyJWT, verifyPremium);
+router.route("/create").post(verifyJWT, createPayment);
+router.route("/webhook").post(handleWebhook);
+router.route("/premium/verify").post(verifyJWT, verifyPremium);
 
 export default router;
