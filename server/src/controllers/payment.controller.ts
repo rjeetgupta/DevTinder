@@ -1,185 +1,111 @@
-// controllers/payment.controller.ts
-
 import { Request, Response } from "express";
-import Razorpay from "razorpay";
-import razorpayInstance from "../utils/razorpay";
-import Payment from "../models/payment.model";
-import User from "../models/user.model";
-import { memberAmount, MembershipType } from "../utils/constant";
-import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
-import { IUser } from "../types/user.types";
+import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js";
+import asyncHandler from "../utils/asyncHandler.js";
+import ApiError from "../utils/ApiError.js";
+import Payment from "../models/payment.model.js";
+import User from "../models/user.model.js";
+import razorpayInstance from "../utils/razorpay.js";
+import { memberAmount, membershipValidityDays } from "../utils/constant.js";
 
-interface AuthRequest extends Request {
-    user: IUser;
-}
+/**
+ * POST /payment/create
+ * Response is intentionally flat (no ApiResponse wrapper) — the frontend
+ * reads `keyId`/`amount`/`currency`/`orderId`/`notes` straight off the body.
+ */
+export const createOrder = asyncHandler(async (req: Request, res: Response) => {
+    const { memberShipType } = req.body as { memberShipType: string };
+    const { _id, firstName, lastName, emailId } = req.user!;
 
-type PaymentNotes = {
-    firstName: string;
-    lastName: string;
-    email: string;
-    memberShipType: MembershipType;
-};
-
-export const createPayment = async (
-    req: Request,
-    res: Response
-) => {
-    try {
-        console.log("Payment request received");
-
-        const { memberShipType } = req.body as {
-            memberShipType: MembershipType;
-        };
-
-        // Validate membership type
-        if (!memberAmount[memberShipType]) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid membership type",
-            });
-        }
-
-        const { _id, firstName, email } = req.user;
-
-        const order = await razorpayInstance.orders.create({
-            amount: memberAmount[memberShipType] * 100,
-            currency: "INR",
-            receipt: `receipt_${Date.now()}`,
-            notes: {
-                firstName,
-                email,
-                memberShipType,
-            },
-        });
-
-        const payment = new Payment({
-            userId: _id,
-            orderId: order.id,
-            amount: order.amount,
-            currency: order.currency,
-            notes: order.notes,
-            status: order.status,
-            memberShipType,
-        });
-
-        const savedPayment = await payment.save();
-
-        res.status(201).json({
-            success: true,
-            ...savedPayment.toJSON(),
-            keyId: process.env.RAZORPAY_KEY_ID,
-        });
-    } catch (error: any) {
-        console.error("Create Payment Error:", error);
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+    const amount = memberAmount[memberShipType];
+    if (!amount) {
+        throw new ApiError(400, "Invalid membership type");
     }
-};
 
+    const order = await razorpayInstance.orders.create({
+        amount: amount * 100, // paise
+        currency: "INR",
+        receipt: `receipt_${Date.now()}`,
+        notes: { firstName, lastName: lastName || "", emailId, memberShipType },
+    });
 
-export const handleWebhook = async (
-    req: Request,
-    res: Response
-) => {
-    try {
-        const signature = req.get("x-razorpay-signature") as string;
+    const payment = await Payment.create({
+        userId: _id,
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        notes: order.notes,
+        status: order.status,
+    });
 
-        const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-        if (!secret) {
-            throw new Error("Webhook secret not defined");
-        }
+    res.status(201).json({
+        success: true,
+        keyId: process.env.RAZORPAY_KEY_ID,
+        amount: payment.amount,
+        currency: payment.currency,
+        orderId: payment.orderId,
+        notes: payment.notes,
+    });
+});
 
-        const isValid = validateWebhookSignature(
-            JSON.stringify(req.body),
-            signature,
-            secret
-        );
+// POST /payment/webhook
+export const razorpayWebhook = asyncHandler(async (req: Request, res: Response) => {
+    const signature = req.headers["x-razorpay-signature"] as string;
 
-        if (!isValid) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid signature",
-            });
-        }
+    const isValid = validateWebhookSignature(
+        JSON.stringify(req.body),
+        signature,
+        process.env.RAZORPAY_WEBHOOK_SECRET
+    );
 
-        const paymentDetails = req.body.payload.payment.entity;
+    if (!isValid) {
+        throw new ApiError(400, "Invalid webhook signature");
+    }
 
-        const paymentRecord = await Payment.findOne({
-            orderId: paymentDetails.order_id,
-        });
+    const paymentEntity = req.body.payload.payment.entity;
 
-        if (!paymentRecord) {
-            return res.status(404).json({
-                success: false,
-                message: "Payment record not found",
-            });
-        }
+    const payment = await Payment.findOne({ orderId: paymentEntity.order_id });
+    if (!payment) {
+        throw new ApiError(404, "Payment record not found");
+    }
 
-        // Update payment status
-        paymentRecord.status = paymentDetails.status;
-        await paymentRecord.save();
+    payment.paymentId = paymentEntity.id;
+    payment.status = paymentEntity.status;
+    await payment.save();
 
-        // Typed notes
-        const notes = paymentRecord.notes as PaymentNotes;
-
-        // Upgrade user
-        const user = await User.findById(paymentRecord.userId);
-
+    if (req.body.event === "payment.captured") {
+        const user = await User.findById(payment.userId);
         if (user) {
+            const memberShipType = payment.notes.memberShipType || "";
+            const validityDays = membershipValidityDays[memberShipType] || 30;
+
+            const now = new Date();
+            const baseDate =
+                user.membershipValidTill && user.membershipValidTill > now
+                    ? user.membershipValidTill
+                    : now;
+
             user.isPremium = true;
-            user.memberShipType = notes.memberShipType;
+            user.memberShipType = memberShipType || null;
+            user.membershipValidTill = new Date(baseDate.getTime() + validityDays * 24 * 60 * 60 * 1000);
             await user.save();
         }
-
-        // Logs
-        if (req.body.event === "payment.captured") {
-            console.log("Payment captured:", paymentDetails.order_id);
-        }
-
-        if (req.body.event === "payment.failed") {
-            console.log("Payment failed:", paymentDetails.order_id);
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Webhook processed successfully",
-        });
-    } catch (error: any) {
-        console.error("Webhook Error:", error);
-        res.status(400).json({
-            success: false,
-            message: error.message,
-        });
     }
-};
 
-export const verifyPremium = async (
-    req: Request,
-    res: Response
-) => {
-    try {
-        const user = req.user;
+    res.status(200).json({ success: true, message: "Webhook received successfully" });
+});
 
-        if (user.isPremium) {
-            return res.status(200).json({
-                success: true,
-                isPremium: true,
-                memberShipType: user.memberShipType,
-                user,
-            });
-        }
+// POST /payment/premium/verify
+export const verifyPremium = asyncHandler(async (req: Request, res: Response) => {
+    const user = req.user!;
 
-        return res.status(200).json({
-            success: true,
-            isPremium: false,
-            user,
-        });
-    } catch (error: any) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
-};
+    const isActive = Boolean(
+        user.isPremium && user.membershipValidTill && user.membershipValidTill > new Date()
+    );
+
+    res.status(200).json({
+        success: true,
+        isPremium: isActive,
+        memberShipType: isActive ? user.memberShipType : null,
+        user,
+    });
+});
