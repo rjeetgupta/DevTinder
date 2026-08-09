@@ -1,13 +1,16 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 
-export type MembershipType = "silver" | "gold" | null;
+export interface IUserLocation {
+    state?: string;
+    country?: string;
+}
 
 export interface IUser extends Document {
+    _id: Types.ObjectId;
     firstName: string;
     lastName?: string;
-    uniqueId: string;
-
-    email: string;
+    uniqueId?: string;
+    emailId: string;
     password: string;
 
     emailVerified: boolean;
@@ -18,17 +21,10 @@ export interface IUser extends Document {
     age?: number;
     gender?: "male" | "female" | "others";
     bio?: string;
-    experienceLevel: "fresher" | "junior" | "mid" | "senior";
-
-    location?: {
-        city?: string;
-        state?: string;
-        country?: string;
-    };
-
-    photoUrl: string;
-
-    skills?: string[];
+    experienceLevel?: "fresher" | "junior" | "mid" | "senior";
+    location?: IUserLocation;
+    photo?: string;
+    skills: string[];
 
     githubUrl?: string;
     linkedinUrl?: string;
@@ -38,18 +34,19 @@ export interface IUser extends Document {
     profileCompletion: number;
     isProfileComplete: boolean;
     isBlocked: boolean;
-
     status: 1 | -1;
+
     isPremium: boolean;
-    memberShipType: MembershipType;
+    memberShipType?: string | null;
+    membershipValidTill?: Date | null;
 
     resetPasswordToken?: string | null;
     resetPasswordExpires?: Date | null;
-    refreshToken?: string;
 
-    generateAccessToken: () => string;
-    generateRefreshToken: () => string;
-
-    createdAt: Date;
-    updatedAt: Date;
+    comparePassword(candidatePassword: string): Promise<boolean>;
+    generateAuthToken(): string;
 }
+
+/** Fields safe to expose to other users (feed, search, connections, chat). */
+export const PUBLIC_USER_FIELDS =
+    "firstName lastName photo age gender bio skills experienceLevel location githubUrl linkedinUrl twitterUrl portfolioUrl isPremium memberShipType emailId";

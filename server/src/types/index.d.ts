@@ -1,5 +1,5 @@
 import "express";
-import { IUser } from "../user.model";
+import { IUser } from "./user.types.js";
 
 declare module "express" {
     interface Request {
