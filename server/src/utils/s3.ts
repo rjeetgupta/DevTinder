@@ -1,54 +1,33 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-const {
-    AWS_REGION,
-    AWS_ACCESS_KEY,
-    AWS_SECRET_KEY,
-    AWS_BUCKET_NAME,
-} = process.env;
-
-if (!AWS_REGION || !AWS_ACCESS_KEY || !AWS_SECRET_KEY || !AWS_BUCKET_NAME) {
-    throw new Error("Missing AWS environment variables");
-}
-
 
 const s3Client = new S3Client({
-    region: AWS_REGION,
+    region: process.env.AWS_REGION,
     credentials: {
-        accessKeyId: AWS_ACCESS_KEY,
-        secretAccessKey: AWS_SECRET_KEY,
+        accessKeyId: process.env.AWS_ACCESS_KEY,
+        secretAccessKey: process.env.AWS_SECRET_KEY,
     },
 });
 
-
-export interface IMulterFile {
-    originalname: string;
-    mimetype: string;
-    buffer: Buffer;
-}
-
-
-export const uploadToS3 = async (file: IMulterFile): Promise<string> => {
+/**
+ * Uploads a profile photo (in-memory multer file) to S3 and returns its
+ * public URL, which gets stored on `user.photo`.
+ */
+export const uploadToS3 = async (file: Express.Multer.File): Promise<string> => {
     const fileName = `profiles/${Date.now()}_${file.originalname}`;
 
-    const params = {
-        Bucket: AWS_BUCKET_NAME,
-        Key: fileName,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-        // ACL: "public-read", // enable only if needed
-    };
-
     try {
-        const command = new PutObjectCommand(params);
-        await s3Client.send(command);
+        await s3Client.send(
+            new PutObjectCommand({
+                Bucket: process.env.AWS_BUCKET_NAME,
+                Key: fileName,
+                Body: file.buffer,
+                ContentType: file.mimetype,
+            })
+        );
 
-        return `https://${AWS_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${fileName}`;
+        return `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
     } catch (error) {
-        console.error("S3 Upload Error:", error);
+        console.error("S3 upload error:", error);
         throw new Error("File upload failed");
     }
 };

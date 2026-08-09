@@ -1,11 +1,16 @@
-import nodemailer, {
-    Transporter,
-    SendMailOptions,
-    SentMessageInfo,
-} from "nodemailer";
+import nodemailer from "nodemailer";
 
+const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, // true for port 465, false for 587
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
 
-export interface MailOptions {
+interface MailOptions {
     to: string;
     subject: string;
     text: string;
@@ -13,61 +18,24 @@ export interface MailOptions {
 }
 
 /**
- * Ensure required environment variables are present
- * Throws an error if missing
+ * Sends an email using the shared transporter. Failures are surfaced to
+ * the caller so callers can decide whether they're fatal (reset-password)
+ * or best-effort (welcome email on signup).
  */
-function validateEnv(): void {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        throw new Error("Missing EMAIL_USER or EMAIL_PASS in environment variables");
-    }
-}
-
-validateEnv();
-
-/**
- * Nodemailer transporter instance configured for Gmail SMTP
- */
-const transporter: Transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // true for 465, false for 587
-    auth: {
-        user: process.env.EMAIL_USER!,
-        pass: process.env.EMAIL_PASS!,
-    },
-});
-
-/**
- * Sends an email using predefined transporter
- * @param {Object} options - Email options
- * @param {string} options.to - Recipient email
- * @param {string} options.subject - Email subject
- * @param {string} options.text - Plain text body
- * @param {string} [options.html] - Optional HTML body
- * @returns {Promise<Object>}
- */
-
-export const sendMail = async (
-    options: MailOptions
-): Promise<SentMessageInfo> => {
+export const sendMail = async ({ to, subject, text, html }: MailOptions) => {
     try {
-        const { to, subject, text, html } = options;
-
-        const mailOptions: SendMailOptions = {
+        const info = await transporter.sendMail({
             from: `"DevTinder" <${process.env.EMAIL_USER}>`,
             to,
             subject,
             text,
             html,
-        };
+        });
 
-        const info = await transporter.sendMail(mailOptions);
-
-        console.log("✅ Email sent successfully:", info.accepted);
-
+        console.log("Email sent successfully:", info.accepted);
         return info;
     } catch (error: any) {
-        console.error("❌ Error sending email:", error.message);
+        console.error("Error sending email:", error.message);
         throw new Error("Failed to send email: " + error.message);
     }
 };

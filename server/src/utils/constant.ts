@@ -1,60 +1,17 @@
-// export enum SubscriptionTier {
-//     FREE = "FREE",
-//     SILVER = "SILVER",
-//     GOLD = "GOLD",
-// }
-
-// export interface SubscriptionPlan {
-//     tier: SubscriptionTier;
-//     displayName: string;
-//     price: number; // INR
-//     validityDays: number; // days
-//     features: string[];
-//     isPopular?: boolean;
-// }
-
-// export const SubscriptionPlans: Record<SubscriptionTier, SubscriptionPlan> = {
-//     [SubscriptionTier.FREE]: {
-//         tier: SubscriptionTier.FREE,
-//         displayName: "Free",
-//         price: 0,
-//         validityDays: 0,
-//         features: ["Limited daily likes", "Swipe & match"],
-//     },
-
-//     [SubscriptionTier.SILVER]: {
-//         tier: SubscriptionTier.SILVER,
-//         displayName: "Silver",
-//         price: 999,
-//         validityDays: 30,
-//         features: ["Unlimited likes", "Ad-free experience"],
-//     },
-
-//     [SubscriptionTier.GOLD]: {
-//         tier: SubscriptionTier.GOLD,
-//         displayName: "Gold",
-//         price: 1999,
-//         validityDays: 30,
-//         isPopular: true,
-//         features: [
-//             "See who liked you",
-//             "Priority visibility",
-//             "Profile verified badge",
-//         ],
-//     },
-// };
-
 /**
- * Membership types supported in the system
+ * Membership pricing (in INR). Keys must match `memberShipType` on the
+ * User/Payment models and the frontend's `MembershipType` union
+ * ("silver" | "gold").
  */
-export type MembershipType = "silver" | "gold";
-
-/**
- * Mapping of membership type to price (INR)
- */
-export const memberAmount: Record<MembershipType, number> = {
+export const memberAmount: Record<string, number> = {
     silver: 200,
     gold: 400,
+};
+
+/** How many days a paid membership stays active before it needs renewal. */
+export const membershipValidityDays: Record<string, number> = {
+    silver: 30,
+    gold: 30,
 };
 
 export interface Skill {
@@ -62,6 +19,10 @@ export interface Skill {
     name: string;
 }
 
+/**
+ * Master skill list used for the profile "skills" picker and the
+ * `/user/suggested-skills` endpoint.
+ */
 export const skillList: Skill[] = [
     // ---------- Frontend ----------
     { id: "html", name: "HTML" },
@@ -115,4 +76,24 @@ export const skillList: Skill[] = [
     // ---------- Others ----------
     { id: "web_security", name: "Web Security" },
     { id: "performance_optimization", name: "Performance Optimization" },
+];
+
+/** Skills suggested to a user, chosen from the popular/high-value subset. */
+export const popularSkillIds: string[] = [
+    "react",
+    "node_js",
+    "express_js",
+    "mongodb",
+    "postgresql",
+    "typescript",
+    "next_js",
+    "redux",
+    "tailwind_css",
+    "docker",
+    "aws",
+    "git",
+    "ci_cd",
+    "system_design",
+    "microservices",
+    "graphql",
 ];
