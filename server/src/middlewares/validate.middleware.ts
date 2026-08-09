@@ -1,9 +1,9 @@
 import { ZodError } from "zod";
-import ApiError from "../utils/ApiError";
+import ApiError from "../utils/ApiError.js";
 import { Request, Response, NextFunction } from "express";
 
 export const validate =
-    (schema: any) => (req: Request, res: Response, next: NextFunction) => {
+    (schema: any) => (req: Request, _res: Response, next: NextFunction) => {
         try {
             schema.parse({
                 body: req.body,
