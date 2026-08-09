@@ -1,22 +1,7 @@
-import { Schema, model, Document, Types } from "mongoose";
+import { Schema, model } from "mongoose";
+import { IChat } from "../types/chat.types.js";
 
-export interface IMessage {
-    senderId: Types.ObjectId;
-    text: string;
-    seen: boolean;
-    createdAt?: Date;
-    updatedAt?: Date;
-}
-
-export interface IChat extends Document {
-    participants: Types.ObjectId[];
-    messages: IMessage[];
-    lastMessageAt: Date;
-    createdAt: Date;
-    updatedAt: Date;
-}
-
-const messageSchema = new Schema<IMessage>(
+const messageSchema = new Schema(
     {
         senderId: {
             type: Schema.Types.ObjectId,
@@ -44,9 +29,7 @@ const chatSchema = new Schema<IChat>(
                 required: true,
             },
         ],
-
         messages: [messageSchema],
-
         lastMessageAt: {
             type: Date,
             default: Date.now,
@@ -54,10 +37,6 @@ const chatSchema = new Schema<IChat>(
     },
     { timestamps: true }
 );
-
-// Fast chat lookup by users
-chatSchema.index({ participants: 1 });
-chatSchema.index({ lastMessageAt: -1 });
 
 const Chat = model<IChat>("Chat", chatSchema);
 export default Chat;

@@ -1,12 +1,6 @@
-import { Schema, model, Document, Types } from "mongoose";
-
-export interface IConnectionRequest extends Document {
-    fromUserId: Types.ObjectId;
-    toUserId: Types.ObjectId;
-    status: "ignored" | "interested" | "accepted" | "rejected";
-    createdAt: Date;
-    updatedAt: Date;
-}
+import { Schema, model } from "mongoose";
+import { IConnectionRequest } from "../types/connection.types.js";
+import { CONNECTION_STATUS } from "../constant/connection.status.js";
 
 const connectionRequestSchema = new Schema<IConnectionRequest>(
     {
@@ -15,47 +9,31 @@ const connectionRequestSchema = new Schema<IConnectionRequest>(
             ref: "User",
             required: true,
         },
-
         toUserId: {
             type: Schema.Types.ObjectId,
             ref: "User",
             required: true,
         },
-
         status: {
             type: String,
+            required: true,
             enum: {
-                values: ["ignored", "interested", "accepted", "rejected"],
-                message: `{VALUE} is incorrect status type`,
+                values: Object.values(CONNECTION_STATUS),
+                message: "{VALUE} is an incorrect status type",
             },
-            default: "interested",
         },
     },
     { timestamps: true }
 );
 
-connectionRequestSchema.index(
-    { fromUserId: 1, toUserId: 1 },
-    { unique: true }
-);
+connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 });
 
-// Fast queries (incoming / outgoing requests)
-connectionRequestSchema.index({ toUserId: 1 });
-connectionRequestSchema.index({ fromUserId: 1 });
-
-connectionRequestSchema.pre(
-    "save",
-    function (this: IConnectionRequest, next) {
-        if (this.fromUserId.equals(this.toUserId)) {
-            return next(
-                new Error("Cannot send connection request to yourself")
-            );
-        }
-        next();
+connectionRequestSchema.pre("save", function (next) {
+    if (this.fromUserId.equals(this.toUserId)) {
+        return next(new Error("Cannot send a connection request to yourself"));
     }
-);
+    next();
+});
 
-export const ConnectionRequest = model<IConnectionRequest>(
-    "ConnectionRequest",
-    connectionRequestSchema
-);
+const ConnectionRequestModel = model<IConnectionRequest>("ConnectionRequest", connectionRequestSchema);
+export default ConnectionRequestModel;

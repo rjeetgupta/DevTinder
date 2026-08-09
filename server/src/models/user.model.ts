@@ -1,34 +1,33 @@
 import { Schema, model } from "mongoose";
 import validator from "validator";
 import bcrypt from "bcrypt";
-import jwt, { SignOptions } from "jsonwebtoken";
-import { IUser } from "../types/user.types";
+import jwt from "jsonwebtoken";
+import { IUser } from "../types/user.types.js";
 
-
-const userSchema: Schema<IUser> = new Schema(
+const userSchema = new Schema<IUser>(
     {
-        /* ---------- Basic Info ---------- */
         firstName: {
             type: String,
             required: true,
             trim: true,
-            minlength: 2,
-            maxlength: 50,
+            minlength: [2, "First name must be at least 2 characters"],
+            maxlength: [50, "First name cannot exceed 50 characters"],
         },
 
         lastName: {
             type: String,
             trim: true,
-            maxlength: 50,
+            maxlength: [50, "Last name cannot exceed 50 characters"],
         },
 
+        // Auto-generated, human-friendly public handle (see pre-save hook below)
         uniqueId: {
             type: String,
             unique: true,
             trim: true,
         },
 
-        email: {
+        emailId: {
             type: String,
             required: true,
             unique: true,
@@ -43,131 +42,114 @@ const userSchema: Schema<IUser> = new Schema(
         password: {
             type: String,
             required: true,
-            validate: {
-                validator: (value: string) =>
-                    validator.isStrongPassword(value),
-                message: "Enter a strong password",
-            },
         },
 
-        /* ---------- Auth ---------- */
+        // ---------- Auth & security ----------
         emailVerified: {
             type: Boolean,
-            default: false
+            default: false,
         },
         lastLoginAt: {
-            type: Date
+            type: Date,
         },
         loginAttempts: {
             type: Number,
-            default: 0
+            default: 0,
         },
         lockUntil: {
-            type: Date
+            type: Date,
         },
 
-        /* ---------- Profile ---------- */
+        // ---------- Profile ----------
         age: {
             type: Number,
             min: 18,
-            max: 60
+            max: 60,
         },
-
         gender: {
             type: String,
             enum: ["male", "female", "others"],
         },
-
         bio: {
             type: String,
-            maxlength: 3000
+            maxlength: 3000,
         },
-
         experienceLevel: {
             type: String,
             enum: ["fresher", "junior", "mid", "senior"],
             default: "fresher",
         },
-
         location: {
-            city: { type: String },
             state: { type: String },
             country: { type: String, default: "India" },
         },
-
-        photoUrl: {
+        photo: {
             type: String,
             default:
                 "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYCZ0qae7TaC6iuCJf6WzgV97HR0rMLm8N5A&s",
             validate: {
-                validator: (value: string): boolean => validator.isURL(value),
+                validator: (value: string) => !value || validator.isURL(value),
                 message: "Invalid photo URL",
             },
         },
-
-        /* ---------- Skills ---------- */
         skills: {
             type: [String],
+            default: [],
             validate: {
                 validator: (value: string[]) => value.length <= 25,
                 message: "Maximum 25 skills allowed",
             },
         },
 
-        /* ---------- Social Links ---------- */
+        // ---------- Social links ----------
         githubUrl: {
             type: String,
             trim: true,
             validate: {
-                validator: (v: string) => !v || validator.isURL(v),
+                validator: (value: string) => !value || validator.isURL(value),
                 message: "Invalid GitHub URL",
             },
         },
-
         linkedinUrl: {
             type: String,
             trim: true,
             validate: {
-                validator: (v: string) => !v || validator.isURL(v),
+                validator: (value: string) => !value || validator.isURL(value),
                 message: "Invalid LinkedIn URL",
             },
         },
-
         twitterUrl: {
             type: String,
             trim: true,
             validate: {
-                validator: (v: string) => !v || validator.isURL(v),
+                validator: (value: string) => !value || validator.isURL(value),
                 message: "Invalid Twitter URL",
             },
         },
-
         portfolioUrl: {
             type: String,
             trim: true,
             validate: {
-                validator: (v: string) => !v || validator.isURL(v),
+                validator: (value: string) => !value || validator.isURL(value),
                 message: "Invalid Portfolio URL",
             },
         },
 
-        /* ---------- App Control ---------- */
+        // ---------- App control ----------
         profileCompletion: {
             type: Number,
             default: 0,
             min: 0,
-            max: 100
+            max: 100,
         },
         isProfileComplete: {
             type: Boolean,
-            default: false
+            default: false,
         },
         isBlocked: {
             type: Boolean,
-            default: false
+            default: false,
         },
-
-        /* ---------- Status ---------- */
         status: {
             type: Number,
             enum: [1, -1],
@@ -175,106 +157,71 @@ const userSchema: Schema<IUser> = new Schema(
             index: true,
         },
 
-        isPremium: { type: Boolean, default: false },
-
+        // ---------- Membership ----------
+        isPremium: {
+            type: Boolean,
+            default: false,
+        },
         memberShipType: {
             type: String,
-            enum: ["silver", "gold", null],
+            default: null,
+        },
+        membershipValidTill: {
+            type: Date,
             default: null,
         },
 
+        // ---------- Password reset ----------
         resetPasswordToken: {
             type: String,
-            default: null
+            default: null,
+            select: false,
         },
         resetPasswordExpires: {
             type: Date,
-            default: null
-        },
-        refreshToken: {
-            type: String,
+            default: null,
             select: false,
         },
     },
     { timestamps: true }
 );
 
-/* ---------- Indexes ---------- */
+// ---------- Indexes ----------
 userSchema.index({ firstName: 1, lastName: 1 });
 userSchema.index({ gender: 1 });
 userSchema.index({ skills: 1 });
-userSchema.index({ "location.city": 1 });
 
+// ---------- Auto-generate a friendly uniqueId ----------
+userSchema.pre("save", function (this: IUser, next) {
+    if (this.isNew || !this.uniqueId) {
+        const namePart = this.firstName.toLowerCase().replace(/\s+/g, "");
+        const specialChars = "@#$&_";
+        const randomSpecial = specialChars[Math.floor(Math.random() * specialChars.length)];
+        const randomSuffix = Math.random().toString(36).substring(2, 5);
+        this.uniqueId = `${namePart}${randomSpecial}${randomSuffix}`;
+    }
+    next();
+});
 
-// Hash password before save
+// ---------- Hash password before save ----------
 userSchema.pre("save", async function (this: IUser, next) {
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });
 
-userSchema.pre("save", function (this: IUser, next) {
-    if (this.isNew || !this.uniqueId) {
-        const namePart = this.firstName.toLowerCase().replace(/\s+/g, "");
-        const specialChars = "@#$&_";
-        const randomSpecial =
-            specialChars[Math.floor(Math.random() * specialChars.length)];
-        const randomSuffix = Math.random().toString(36).substring(2, 5);
-
-        this.uniqueId = `${namePart}${randomSpecial}${randomSuffix}`;
-    }
-    next();
-});
-
-// Compare password
-userSchema.methods.comparePassword = async function (
-    this: IUser,
-    password: string
-): Promise<boolean> {
+// ---------- Instance methods ----------
+userSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);
 };
 
-// Generate Access Token
-userSchema.methods.generateAccessToken = function (this: IUser): string {
-    const secret = process.env.ACCESS_TOKEN_SECRET;
-    if (!secret) {
-        throw new Error("ACCESS_TOKEN_SECRET is not defined");
-    }
-
-    const expiresIn = process.env.ACCESS_TOKEN_EXPIRY || "15m";
-
-    const payload = {
-        _id: this._id.toString(),
-        email: this.email,
-    };
-
-    const options: SignOptions = {
-        expiresIn: expiresIn as SignOptions["expiresIn"],
-    };
-
-    return jwt.sign(payload, secret, options);
+userSchema.methods.generateAuthToken = function (): string {
+    return jwt.sign(
+        { _id: this._id.toString(), emailId: this.emailId },
+        process.env.JWT_SECRET,
+        { expiresIn: (process.env.JWT_EXPIRY || "1d") as jwt.SignOptions["expiresIn"] }
+    );
 };
 
-// Generate Refresh Token
-userSchema.methods.generateRefreshToken = function (this: IUser): string {
-    const secret = process.env.REFRESH_TOKEN_SECRET;
-    if (!secret) {
-        throw new Error("REFRESH_TOKEN_SECRET is not defined");
-    }
-
-    const expiresIn = process.env.REFRESH_TOKEN_EXPIRY || "7d";
-
-    const payload = {
-        _id: this._id.toString(),
-    };
-
-    const options: SignOptions = {
-        expiresIn: expiresIn as SignOptions["expiresIn"],
-    };
-
-    return jwt.sign(payload, secret, options);
-};
-
-// Export model
 const User = model<IUser>("User", userSchema);
 export default User;
