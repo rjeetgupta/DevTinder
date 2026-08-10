@@ -1,17 +1,29 @@
-import { apiClient } from "./ApiClient";
-import { createOrderResponseSchema, type CreateOrderResponse, type MembershipType } from "@/types";
+import { apiClient, extractErrorMessage } from "./ApiClient";
+import type { MembershipType } from "@/types";
 
+/**
+ * No user-typed input here (membershipType is a fixed enum selection,
+ * not free-form form input) — so no Zod validation step needed beyond
+ * TypeScript's own enum typing. Response returned as-is.
+ */
 export class PaymentService {
   /** Backend expects `memberShipType` (capital S — matches the pre-existing typo elsewhere). */
-  async createOrder(membershipType: MembershipType): Promise<CreateOrderResponse> {
-    const res = await apiClient.post("/payment/create", { memberShipType: membershipType });
-    return createOrderResponseSchema.parse(res.data);
+  async createOrder(membershipType: MembershipType) {
+    try {
+      const res = await apiClient.post("/payment/create", { memberShipType: membershipType });
+      return res.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Unable to start checkout. Please try again."));
+    }
   }
 
-  /** Also a POST, and returns `{ isPremium }` directly (no `data` wrapper). */
-  async verifyPremium(): Promise<boolean> {
-    const res = await apiClient.post("/payment/premium/verify", {});
-    return Boolean(res.data.isPremium);
+  async verifyPremium() {
+    try {
+      const res = await apiClient.post("/payment/premium/verify", {});
+      return res.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Unable to verify payment. Please try again."));
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-import { extractErrorMessage } from "@/services/api/ApiClient";
+import { getErrorMessage } from "@/services/api/ApiClient";
 import { paymentService } from "@/services/api/PaymentService";
 import type { CreateOrderResponse, MembershipType } from "@/types";
 
@@ -18,11 +18,18 @@ const initialState: PremiumState = {
   orderError: null,
 };
 
+/** verifyPremium's original impl read `res.data.isPremium` directly (no
+ *  `data` wrapper) — preserved here since the service no longer unwraps. */
+function unwrapIsPremium(res: unknown): boolean {
+  return Boolean((res as { isPremium?: boolean })?.isPremium);
+}
+
 export const verifyPremiumStatus = createAsyncThunk<boolean>(
   "premium/verify",
   async () => {
     try {
-      return await paymentService.verifyPremium();
+      const res = await paymentService.verifyPremium();
+      return unwrapIsPremium(res);
     } catch {
       return false;
     }
@@ -35,9 +42,11 @@ export const createPremiumOrder = createAsyncThunk<
   { rejectValue: string }
 >("premium/createOrder", async (membershipType, { rejectWithValue }) => {
   try {
-    return await paymentService.createOrder(membershipType);
+    // createOrder's response has no `data` wrapper (it's the order object
+    // directly) — matches the original client, no unwrap needed here.
+    return (await paymentService.createOrder(membershipType)) as CreateOrderResponse;
   } catch (error) {
-    return rejectWithValue(extractErrorMessage(error, "Unable to initiate payment."));
+    return rejectWithValue(getErrorMessage(error, "Unable to initiate payment."));
   }
 });
 

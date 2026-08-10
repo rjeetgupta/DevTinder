@@ -7,10 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export function PremiumStatusCard({ membershipType }: { membershipType?: string | null }) {
   return (
-    <Card className="border-secondary/30 mx-auto max-w-lg">
+    <Card className="border-primary/25 glow-border mx-auto max-w-lg">
       <CardContent className="flex flex-col items-center gap-4 text-center">
-        <div className="bg-secondary/20 flex size-16 items-center justify-center rounded-full">
-          <Crown className="text-secondary size-8" />
+        <div className="bg-primary/15 flex size-16 items-center justify-center rounded-full">
+          <Crown className="text-primary size-8" />
         </div>
         <div>
           <div className="mb-1 flex items-center justify-center gap-2">

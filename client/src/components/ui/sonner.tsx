@@ -16,7 +16,7 @@ function Toaster(props: ToasterProps) {
       toastOptions={{
         classNames: {
           toast:
-            "glass group-[.toaster]:shadow-xl group-[.toaster]:shadow-black/30 group-[.toaster]:text-foreground group-[.toaster]:rounded-xl",
+            "glass group-[.toaster]:shadow-xl group-[.toaster]:shadow-black/30 group-[.toaster]:text-foreground group-[.toaster]:rounded-lg",
           description: "group-[.toast]:text-muted-foreground",
           actionButton: "group-[.toast]:brand-gradient group-[.toast]:text-primary-foreground",
           cancelButton: "group-[.toast]:bg-white/10 group-[.toast]:text-muted-foreground",

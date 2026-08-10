@@ -1,8 +1,9 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 import { aiService } from "@/services/api/AiService";
-import { extractErrorMessage } from "@/services/api/ApiClient";
+import { getErrorMessage } from "@/services/api/ApiClient";
 import type { Roadmap } from "@/types";
+import type { RootState } from "@/store/store";
 
 interface AiState {
   roadmap: Roadmap | null;
@@ -16,18 +17,26 @@ const initialState: AiState = {
   error: null,
 };
 
-export const generateRoadmap = createAsyncThunk<Roadmap, void, { rejectValue: string }>(
-  "ai/generateRoadmap",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiService.suggestCourses();
-    } catch (error) {
-      return rejectWithValue(
-        extractErrorMessage(error, "AI service is currently busy. Please try again.")
-      );
-    }
+function unwrapData<T>(res: unknown): T {
+  const data = res as { data?: T };
+  return (data?.data ?? res) as T;
+}
+
+export const generateRoadmap = createAsyncThunk<
+  Roadmap,
+  void,
+  { rejectValue: string; state: RootState }
+>("ai/generateRoadmap", async (_, { rejectWithValue, getState }) => {
+  try {
+    const skills = getState().auth.user?.skills ?? [];
+    const res = await aiService.suggestCourses(skills);
+    return unwrapData<Roadmap>(res);
+  } catch (error) {
+    return rejectWithValue(
+      getErrorMessage(error, "AI service is currently busy. Please try again.")
+    );
   }
-);
+});
 
 const aiSlice = createSlice({
   name: "ai",

@@ -1,5 +1,12 @@
-import { apiClient } from "./ApiClient";
-import { userSchema, userListSchema, type User, type UserLocation } from "@/types";
+import { apiClient, extractErrorMessage } from "./ApiClient";
+import type { UserLocation } from "@/types";
+// TODO: point this at your real schema — placeholder based on
+// EditProfilePayload shape. Replace once confirmed. Note: the schema
+// should validate the plain fields only; `photo` (a File) is appended
+// to FormData separately below and isn't something Zod validates here
+// (do file-type/size checks at the input `<input type="file">` layer
+// if not already done there).
+import { editProfileSchema } from "@/lib/validation/profileSchemas";
 
 export interface EditProfilePayload {
   firstName: string;
@@ -22,65 +29,100 @@ export interface EditProfilePayload {
  * profile, the swipe feed, search, and looking up other users by id.
  */
 export class UserService {
-  async getProfile(): Promise<User> {
-    const res = await apiClient.get("/profile/view");
-    return userSchema.parse(res.data.data ?? res.data);
+  async getProfile() {
+    try {
+      const res = await apiClient.get("/profile");
+      return res.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Unable to load your profile."));
+    }
   }
 
-  async editProfile(payload: EditProfilePayload): Promise<User> {
-    const formData = new FormData();
+  async editProfile(payload: EditProfilePayload) {
+    const { photo, ...validatable } = payload;
+    const parsed = editProfileSchema.safeParse(validatable);
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues[0]?.message ?? "Please check your input.");
+    }
 
-    formData.append("firstName", payload.firstName);
-    if (payload.lastName) formData.append("lastName", payload.lastName);
-    if (payload.age) formData.append("age", String(payload.age));
-    if (payload.gender) formData.append("gender", payload.gender);
-    formData.append("bio", payload.bio);
-    if (payload.experienceLevel) formData.append("experienceLevel", payload.experienceLevel);
+    const formData = new FormData();
+    const data = parsed.data;
+
+    formData.append("firstName", data.firstName);
+    if (data.lastName) formData.append("lastName", data.lastName);
+    if (data.age) formData.append("age", String(data.age));
+    if (data.gender) formData.append("gender", data.gender);
+    formData.append("bio", data.bio);
+    if (data.experienceLevel) formData.append("experienceLevel", data.experienceLevel);
 
     // Backend expects these two JSON-stringified, matching the original client.
-    formData.append("skills", JSON.stringify(payload.skills ?? []));
-    if (payload.location) {
-      formData.append("location", JSON.stringify(payload.location));
+    formData.append("skills", JSON.stringify(data.skills ?? []));
+    if (data.location) {
+      formData.append("location", JSON.stringify(data.location));
     }
 
-    if (payload.githubUrl) formData.append("githubUrl", payload.githubUrl);
-    if (payload.linkedinUrl) formData.append("linkedinUrl", payload.linkedinUrl);
-    if (payload.twitterUrl) formData.append("twitterUrl", payload.twitterUrl);
-    if (payload.portfolioUrl) formData.append("portfolioUrl", payload.portfolioUrl);
+    if (data.githubUrl) formData.append("githubUrl", data.githubUrl);
+    if (data.linkedinUrl) formData.append("linkedinUrl", data.linkedinUrl);
+    if (data.twitterUrl) formData.append("twitterUrl", data.twitterUrl);
+    if (data.portfolioUrl) formData.append("portfolioUrl", data.portfolioUrl);
 
-    if (payload.photo instanceof File) {
-      formData.append("photo", payload.photo);
+    if (photo instanceof File) {
+      formData.append("photo", photo);
     }
 
-    const res = await apiClient.post("/profile/edit", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    return userSchema.parse(res.data.data ?? res.data);
+    try {
+      const res = await apiClient.post("/profile/update-profile", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Unable to save profile. Please try again."));
+    }
   }
 
-  async getFeed(): Promise<User[]> {
-    const res = await apiClient.get("/connections/feed");
-    return userListSchema.parse(res.data.data ?? res.data);
+  async getFeed(page = 1, limit = 10) {
+    try {
+      const res = await apiClient.post("/user/feed", { page, limit });
+      return res.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Unable to load your feed."));
+    }
   }
 
-  async getUserById(userId: string): Promise<User> {
-    const res = await apiClient.get(`/user/${userId}`);
-    return userSchema.parse(res.data.data ?? res.data);
+  async getUserById(userId: string) {
+    try {
+      const res = await apiClient.get(`/user/${userId}`);
+      return res.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Unable to load this user."));
+    }
   }
 
-  async searchUsers(query: string): Promise<User[]> {
-    const res = await apiClient.get("/user/search", { params: { q: query } });
-    return userListSchema.parse(res.data.data ?? res.data);
+  async searchUsers(query: string) {
+    try {
+      const res = await apiClient.get("/user/search", { params: { q: query } });
+      return res.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Unable to search users. Please try again."));
+    }
   }
 
-  async getSuggestedSkills(): Promise<string[]> {
-    const res = await apiClient.get("/user/suggested-skills");
-    return res.data.data ?? res.data;
+  async getSuggestedSkills() {
+    try {
+      const res = await apiClient.get("/user/suggested-skills");
+      return res.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Unable to load suggested skills."));
+    }
   }
 
-  async isConnected(targetUserId: string): Promise<boolean> {
-    const res = await apiClient.get(`/connections/is-connected/${targetUserId}`);
-    return Boolean(res.data.isConnected);
+  async isConnected(targetUserId: string) {
+    try {
+      const res = await apiClient.get(`/user/is-connected/${targetUserId}`);
+      return res.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Unable to check connection status."));
+    }
   }
 }
 

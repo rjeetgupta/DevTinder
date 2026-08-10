@@ -5,7 +5,7 @@
  */
 export const env = {
   /** Base URL of the existing Express backend REST API, e.g. http://localhost:7777/api */
-  apiUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api",
+  apiUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1",
   /** Base URL of the Socket.io server, e.g. http://localhost:7777 */
   socketUrl: process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:7777",
 } as const;

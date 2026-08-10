@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 const HIGHLIGHTS = [
   { icon: Flame, title: "Hot skills", desc: "Target what's in demand", color: "text-red-400" },
   { icon: TrendingUp, title: "Career growth", desc: "Salary optimization", color: "text-emerald-400" },
-  { icon: Terminal, title: "Resource finder", desc: "Curated tutorials", color: "text-blue-400" },
+  { icon: Terminal, title: "Resource finder", desc: "Curated tutorials", color: "text-primary" },
 ];
 
 export function AiCoachHero({
@@ -41,7 +41,7 @@ export function AiCoachHero({
 
       <div className="bg-black/30 flex flex-col justify-center gap-3 p-8 md:p-10">
         {HIGHLIGHTS.map(({ icon: Icon, title, desc, color }) => (
-          <div key={title} className="glass flex items-center gap-4 rounded-xl p-4">
+          <div key={title} className="glass flex items-center gap-4 rounded-lg p-4">
             <div className={`rounded-lg bg-white/5 p-3 ${color}`}>
               <Icon className="size-5" />
             </div>

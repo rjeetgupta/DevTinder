@@ -27,7 +27,7 @@ import {
   GENDER_OPTIONS,
   STATE_OPTIONS,
 } from "@/lib/constants/profile-options";
-import { profileFormSchema, type ProfileFormValues } from "@/lib/validation/profileSchemas";
+import { editProfileSchema, type ProfileFormValues } from "@/lib/validation/profileSchemas";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { editProfile } from "@/store/slices/authSlice";
 import type { User } from "@/types";
@@ -66,7 +66,7 @@ export function ProfileForm() {
     watch,
     formState: { errors },
   } = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
+    resolver: zodResolver(editProfileSchema),
     defaultValues: toDefaultValues(user),
     mode: "onChange",
   });
@@ -103,7 +103,7 @@ export function ProfileForm() {
     <div className="flex flex-col items-start gap-6 lg:flex-row">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="glass w-full flex-1 rounded-xl p-6 shadow-xl shadow-black/20 lg:p-8"
+        className="glass w-full flex-1 rounded-lg p-6 shadow-xl shadow-black/20 lg:p-8"
       >
         <div className="mb-6 border-b border-white/10 pb-4">
           <h2 className="text-h2">Edit profile</h2>

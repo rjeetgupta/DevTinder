@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-import { extractErrorMessage } from "@/services/api/ApiClient";
+import { getErrorMessage } from "@/services/api/ApiClient";
 import { matchService } from "@/services/api/MatchService";
 import { userService } from "@/services/api/UserService";
 import type { SendStatus, User } from "@/types";
@@ -20,13 +20,26 @@ const initialState: FeedState = {
   pendingUserId: null,
 };
 
+function unwrapArray<T>(res: unknown): T[] {
+  const data = res as { data?: T[] } | T[];
+  return Array.isArray(data) ? data : data?.data ?? [];
+}
+
+/** UserService.isConnected's original impl read `res.data.isConnected`
+ *  directly (no `data` wrapper) — preserved here since the service no
+ *  longer does this unwrapping itself. */
+function unwrapIsConnected(res: unknown): boolean {
+  return Boolean((res as { isConnected?: boolean })?.isConnected);
+}
+
 export const fetchFeed = createAsyncThunk<User[], void, { rejectValue: string }>(
   "feed/fetchFeed",
   async (_, { rejectWithValue }) => {
     try {
-      return await userService.getFeed();
+      const res = await userService.getFeed();
+      return unwrapArray<User>(res);
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, "Could not load your feed."));
+      return rejectWithValue(getErrorMessage(error, "Could not load your feed."));
     }
   }
 );
@@ -40,7 +53,7 @@ export const sendFeedRequest = createAsyncThunk<
     await matchService.sendRequest(status, userId);
     return { userId, status };
   } catch (error) {
-    return rejectWithValue(extractErrorMessage(error, "Action failed."));
+    return rejectWithValue(getErrorMessage(error, "Action failed."));
   }
 });
 
@@ -53,9 +66,10 @@ export const checkIsConnected = createAsyncThunk<boolean, string, { rejectValue:
   "feed/checkIsConnected",
   async (userId, { rejectWithValue }) => {
     try {
-      return await userService.isConnected(userId);
+      const res = await userService.isConnected(userId);
+      return unwrapIsConnected(res);
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, "Could not check connection status."));
+      return rejectWithValue(getErrorMessage(error, "Could not check connection status."));
     }
   }
 );

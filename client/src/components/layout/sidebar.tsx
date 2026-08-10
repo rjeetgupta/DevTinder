@@ -43,13 +43,13 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "glass hidden h-full w-60 shrink-0 flex-col gap-6 rounded-xl p-4 md:flex",
+        "glass hidden h-full w-60 shrink-0 flex-col gap-6 rounded-lg p-4 md:flex",
         className
       )}
     >
       <div className="flex items-center gap-2 px-2 pt-1">
         <NodeMark />
-        <span className="text-h3 tracking-tight">DevTinder</span>
+        <span className="font-display text-lg font-semibold tracking-tight">DevTinder</span>
       </div>
 
       <nav className="flex flex-col gap-1">
@@ -62,13 +62,17 @@ export function Sidebar({
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "bg-white/10 text-foreground"
+                  ? "bg-primary/15 text-primary shadow-[0_0_0_1px_rgba(245,158,11,0.2),0_0_20px_rgba(245,158,11,0.1)]"
                   : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
               )}
             >
-              <Icon className="size-[18px]" />
+              <Icon
+                className="size-[18px]"
+                strokeWidth={1.5}
+                aria-hidden
+              />
               {item.label}
             </Link>
           );

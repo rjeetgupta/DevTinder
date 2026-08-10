@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-import { extractErrorMessage } from "@/services/api/ApiClient";
+import { getErrorMessage } from "@/services/api/ApiClient";
 import { authService, type LoginPayload, type SignupPayload } from "@/services/api/AuthService";
 import { userService, type EditProfilePayload } from "@/services/api/UserService";
 import { socketService } from "@/services/socket/SocketService";
@@ -21,13 +21,34 @@ const initialState: AuthState = {
   error: null,
 };
 
+/**
+ * Services now return the RAW backend envelope (no unwrapping happens
+ * in the service layer anymore) — e.g.
+ *   { message: "...", data: { loggedInUser: {...} } }
+ *   { message: "...", data: { registeredUser: {...} } }
+ * The key inside `data` isn't consistent across endpoints, so this is
+ * the single place that normalizes it into a plain `User`.
+ */
+function unwrapUser(responseData: unknown): User {
+  if (responseData && typeof responseData === "object" && "data" in responseData) {
+    const inner = (responseData as { data: unknown }).data;
+    if (inner && typeof inner === "object") {
+      const obj = inner as Record<string, unknown>;
+      return (obj.loggedInUser ?? obj.registeredUser ?? obj.user ?? inner) as User;
+    }
+    return inner as User;
+  }
+  return responseData as User;
+}
+
 export const login = createAsyncThunk<User, LoginPayload, { rejectValue: string }>(
   "auth/login",
   async (payload, { rejectWithValue }) => {
     try {
-      return await authService.login(payload);
+      const res = await authService.login(payload);
+      return unwrapUser(res);
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, "Invalid email or password."));
+      return rejectWithValue(getErrorMessage(error, "Invalid email or password."));
     }
   }
 );
@@ -36,9 +57,10 @@ export const signup = createAsyncThunk<User, SignupPayload, { rejectValue: strin
   "auth/signup",
   async (payload, { rejectWithValue }) => {
     try {
-      return await authService.signup(payload);
+      const res = await authService.signup(payload);
+      return unwrapUser(res);
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, "Could not create your account."));
+      return rejectWithValue(getErrorMessage(error, "Could not create your account."));
     }
   }
 );
@@ -51,7 +73,7 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
     } catch (error) {
       // Even if the backend call fails, the client-side session should
       // still clear — so we don't reject here, just log for visibility.
-      console.error("Logout request failed:", extractErrorMessage(error));
+      console.error("Logout request failed:", getErrorMessage(error, "Unknown error"));
     } finally {
       socketService.disconnect();
     }
@@ -63,7 +85,8 @@ export const bootstrapAuth = createAsyncThunk<User | null>(
   "auth/bootstrap",
   async () => {
     try {
-      return await authService.fetchCurrentUser();
+      const res = await authService.fetchCurrentUser();
+      return unwrapUser(res);
     } catch {
       return null;
     }
@@ -79,7 +102,8 @@ export const refreshCurrentUser = createAsyncThunk<User | null>(
   "auth/refresh",
   async () => {
     try {
-      return await authService.fetchCurrentUser();
+      const res = await authService.fetchCurrentUser();
+      return unwrapUser(res);
     } catch {
       return null;
     }
@@ -90,9 +114,10 @@ export const editProfile = createAsyncThunk<User, EditProfilePayload, { rejectVa
   "auth/editProfile",
   async (payload, { rejectWithValue }) => {
     try {
-      return await userService.editProfile(payload);
+      const res = await userService.editProfile(payload);
+      return unwrapUser(res);
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, "Could not update your profile."));
+      return rejectWithValue(getErrorMessage(error, "Could not update your profile."));
     }
   }
 );

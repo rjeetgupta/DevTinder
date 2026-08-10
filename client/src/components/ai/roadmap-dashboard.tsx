@@ -23,7 +23,7 @@ export function RoadmapDashboard({
 }) {
   return (
     <div className="flex flex-col gap-8">
-      <div className="glass flex flex-col items-center justify-between gap-4 rounded-xl p-6 sm:flex-row">
+      <div className="glass flex flex-col items-center justify-between gap-4 rounded-lg p-6 sm:flex-row">
         <div>
           <h1 className="text-h2">
             Your personal <span className="brand-gradient-text">action plan</span>
@@ -44,7 +44,7 @@ export function RoadmapDashboard({
       {roadmap.mustHave.length > 0 && (
         <section>
           <div className="mb-4 flex items-center gap-3">
-            <div className="rounded-xl bg-rose-500/15 p-3 text-rose-400">
+            <div className="rounded-lg bg-rose-500/15 p-3 text-rose-400">
               <Zap className="size-5" />
             </div>
             <div>
@@ -95,7 +95,7 @@ export function RoadmapDashboard({
         {roadmap.recommended.length > 0 && (
           <div className="md:col-span-8">
             <div className="mb-4 flex items-center gap-3">
-              <div className="rounded-xl bg-blue-500/15 p-3 text-blue-400">
+              <div className="rounded-lg bg-primary/15 p-3 text-primary">
                 <TrendingUp className="size-5" />
               </div>
               <div>
@@ -135,9 +135,9 @@ export function RoadmapDashboard({
                     </Badge>
                   ))}
                 </div>
-                <div className="mt-6 flex gap-2 rounded-xl bg-blue-500/10 p-4">
-                  <Sparkles className="size-4 shrink-0 text-blue-400" />
-                  <p className="text-xs text-blue-300">
+                <div className="mt-6 flex gap-2 rounded-lg bg-primary/10 p-4">
+                  <Sparkles className="size-4 shrink-0 text-primary" />
+                  <p className="text-xs text-amber-200/80">
                     Pro tip: focus on Immediate Priority first — don&apos;t get overwhelmed!
                   </p>
                 </div>

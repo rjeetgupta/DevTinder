@@ -35,7 +35,7 @@ export function ConnectionCard({ connection }: { connection: User }) {
       >
         <Avatar
           className={`size-16 shrink-0 ring-2 ring-offset-2 ring-offset-transparent ${
-            connection.isPremium ? "ring-secondary" : "ring-primary/50"
+            connection.isPremium ? "ring-primary ring-offset-background shadow-[0_0_16px_rgba(245,158,11,0.35)]" : "ring-primary/50"
           }`}
         >
           <AvatarImage src={connection.photo ?? undefined} alt={connection.firstName} />
@@ -45,7 +45,7 @@ export function ConnectionCard({ connection }: { connection: User }) {
         <div className="min-w-0 flex-1">
           <h3 className="flex flex-wrap items-center gap-1.5 font-semibold">
             {connection.firstName} {connection.lastName}
-            {connection.isPremium && <BadgeCheck className="text-secondary size-4 shrink-0" />}
+            {connection.isPremium && <BadgeCheck className="text-primary size-4 shrink-0" />}
             {connection.age ? (
               <span className="text-muted-foreground text-sm font-normal">
                 ({connection.age})

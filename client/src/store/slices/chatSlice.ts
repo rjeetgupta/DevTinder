@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-import { extractErrorMessage } from "@/services/api/ApiClient";
+import { getErrorMessage } from "@/services/api/ApiClient";
 import { chatService } from "@/services/api/ChatService";
 import { matchService } from "@/services/api/MatchService";
 import type { ChatListItem, ChatMessage } from "@/types";
@@ -26,13 +26,26 @@ const initialState: ChatState = {
   messagesError: null,
 };
 
+// Services now return the raw backend envelope — unwrap here, same shape
+// the service used to unwrap internally.
+function unwrapList(res: unknown): ChatListItem[] {
+  const data = res as { data?: ChatListItem[] } | ChatListItem[];
+  return Array.isArray(data) ? data : data?.data ?? [];
+}
+
+function unwrapMessages(res: unknown): ChatMessage[] {
+  const data = res as { data?: { messages?: ChatMessage[] }; messages?: ChatMessage[] };
+  return data?.data?.messages ?? data?.messages ?? [];
+}
+
 export const fetchChatList = createAsyncThunk<ChatListItem[], void, { rejectValue: string }>(
   "chat/fetchList",
   async (_, { rejectWithValue }) => {
     try {
-      return await chatService.getChatList();
+      const res = await chatService.getChatList();
+      return unwrapList(res);
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, "Could not load your chats."));
+      return rejectWithValue(getErrorMessage(error, "Could not load your chats."));
     }
   }
 );
@@ -41,9 +54,10 @@ export const fetchChatHistory = createAsyncThunk<ChatMessage[], string, { reject
   "chat/fetchHistory",
   async (targetUserId, { rejectWithValue }) => {
     try {
-      return await chatService.getChatHistory(targetUserId);
+      const res = await chatService.getChatHistory(targetUserId);
+      return unwrapMessages(res);
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, "Could not load this conversation."));
+      return rejectWithValue(getErrorMessage(error, "Could not load this conversation."));
     }
   }
 );
@@ -55,7 +69,7 @@ export const sendConnectionRequestFromChat = createAsyncThunk<void, string, { re
     try {
       await matchService.sendRequest("intrested", targetUserId);
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, "Unable to connect."));
+      return rejectWithValue(getErrorMessage(error, "Unable to connect."));
     }
   }
 );

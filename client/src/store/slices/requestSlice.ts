@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-import { extractErrorMessage } from "@/services/api/ApiClient";
+import { getErrorMessage } from "@/services/api/ApiClient";
 import { matchService } from "@/services/api/MatchService";
 import type { ConnectionRequest, ReviewStatus, SendStatus, User } from "@/types";
 
@@ -27,13 +27,19 @@ const initialState: RequestState = {
   pendingId: null,
 };
 
+function unwrapArray<T>(res: unknown): T[] {
+  const data = res as { data?: T[] } | T[];
+  return Array.isArray(data) ? data : data?.data ?? [];
+}
+
 export const fetchReceivedRequests = createAsyncThunk<ConnectionRequest[], void, { rejectValue: string }>(
   "requests/fetchReceived",
   async (_, { rejectWithValue }) => {
     try {
-      return await matchService.getReceivedRequests();
+      const res = await matchService.getReceivedRequests();
+      return unwrapArray<ConnectionRequest>(res);
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, "Could not load requests."));
+      return rejectWithValue(getErrorMessage(error, "Could not load requests."));
     }
   }
 );
@@ -47,7 +53,7 @@ export const reviewRequest = createAsyncThunk<
     await matchService.reviewRequest(status, requestId);
     return { requestId };
   } catch (error) {
-    return rejectWithValue(extractErrorMessage(error, "Could not review this request."));
+    return rejectWithValue(getErrorMessage(error, "Could not review this request."));
   }
 });
 
@@ -55,9 +61,10 @@ export const fetchIgnoredUsers = createAsyncThunk<User[], void, { rejectValue: s
   "requests/fetchIgnored",
   async (_, { rejectWithValue }) => {
     try {
-      return await matchService.getIgnoredRequests();
+      const res = await matchService.getIgnoredRequests();
+      return unwrapArray<User>(res);
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, "Could not load ignored users."));
+      return rejectWithValue(getErrorMessage(error, "Could not load ignored users."));
     }
   }
 );
@@ -71,7 +78,7 @@ export const resendRequest = createAsyncThunk<
     await matchService.resendRequest(status, userId);
     return { userId };
   } catch (error) {
-    return rejectWithValue(extractErrorMessage(error, "Action failed."));
+    return rejectWithValue(getErrorMessage(error, "Action failed."));
   }
 });
 

@@ -50,7 +50,7 @@ export function UserDetailDialog({
           <div className="flex flex-col items-center gap-3">
             <Avatar
               className={`size-24 ring-2 ring-offset-2 ring-offset-transparent ${
-                user.isPremium ? "ring-secondary" : "ring-primary/50"
+                user.isPremium ? "ring-primary ring-offset-background shadow-[0_0_16px_rgba(245,158,11,0.35)]" : "ring-primary/50"
               }`}
             >
               <AvatarImage src={user.photo ?? undefined} alt={user.firstName} />
@@ -59,7 +59,7 @@ export function UserDetailDialog({
             <DialogTitle className="flex items-center gap-1.5">
               {user.firstName} {user.lastName}
               {user.age ? `, ${user.age}` : ""}
-              {user.isPremium && <BadgeCheck className="text-secondary size-4" />}
+              {user.isPremium && <BadgeCheck className="text-primary size-4" />}
             </DialogTitle>
             {(stateName || user.experienceLevel) && (
               <DialogDescription className="flex items-center gap-3">

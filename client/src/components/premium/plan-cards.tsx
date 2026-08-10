@@ -51,7 +51,7 @@ export function PlanCards({
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Silver — active plan */}
-        <Card className="border-primary/30">
+        <Card className="border-primary/20 glow-border">
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
@@ -74,7 +74,7 @@ export function PlanCards({
                     highlight ? "bg-white/5 rounded-lg p-2 font-semibold" : ""
                   }`}
                 >
-                  <Icon className={highlight ? "text-secondary size-4" : "text-primary size-4"} />
+                  <Icon className={highlight ? "text-primary size-4" : "text-primary size-4"} />
                   {text}
                 </li>
               ))}
@@ -136,13 +136,13 @@ export function PlanCards({
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="text-secondary size-5" /> Premium benefits
+              <Sparkles className="text-primary size-5" /> Premium benefits
             </DialogTitle>
             <DialogDescription>Take your career to the next level.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3 sm:grid-cols-2">
             {PREMIUM_FEATURES.map((feature) => (
-              <div key={feature.title} className="glass rounded-xl p-4">
+              <div key={feature.title} className="glass rounded-lg p-4">
                 <div className="mb-1 text-2xl">{feature.icon}</div>
                 <h4 className="text-sm font-semibold">{feature.title}</h4>
                 <p className="text-muted-foreground mt-1 text-xs leading-relaxed">

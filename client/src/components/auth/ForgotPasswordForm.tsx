@@ -32,7 +32,7 @@ export function ForgotPasswordForm() {
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setIsSubmitting(true);
     try {
-      await authService.forgotPassword(data.email);
+      await authService.forgotPassword(data.emailId);
       setSent(true);
     } catch (error) {
       toast.error(extractErrorMessage(error, "Could not send reset link."));
@@ -59,8 +59,8 @@ export function ForgotPasswordForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="grid gap-1.5">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" autoComplete="email" {...register("email")} />
-        {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
+        <Input id="email" type="email" autoComplete="email" {...register("emailId")} />
+        {errors.emailId && <p className="text-destructive text-xs">{errors.emailId.message}</p>}
       </div>
       <Button type="submit" size="lg" disabled={isSubmitting}>
         {isSubmitting && <Loader2 className="size-4 animate-spin" />}

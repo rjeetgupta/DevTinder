@@ -14,7 +14,7 @@ function FeedSkeletonGrid() {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="glass flex flex-col items-center gap-4 rounded-xl p-6">
+        <div key={i} className="glass flex flex-col items-center gap-4 rounded-lg p-6">
           <Skeleton className="size-28 rounded-full" />
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-3 w-48" />
@@ -57,7 +57,7 @@ export default function FeedPage() {
       {status === "loading" && users.length === 0 && <FeedSkeletonGrid />}
 
       {status === "failed" && (
-        <div className="glass flex flex-col items-center gap-3 rounded-xl p-10 text-center">
+        <div className="glass flex flex-col items-center gap-3 rounded-lg p-10 text-center">
           <p className="text-destructive text-sm">{error}</p>
           <Button variant="outline" size="sm" onClick={() => dispatch(fetchFeed())}>
             Try again
@@ -66,7 +66,7 @@ export default function FeedPage() {
       )}
 
       {status === "succeeded" && users.length === 0 && (
-        <div className="glass flex flex-col items-center gap-3 rounded-xl p-16 text-center">
+        <div className="glass flex flex-col items-center gap-3 rounded-lg p-16 text-center">
           <Radar className="text-primary size-10" />
           <h2 className="text-h3">You&apos;re all caught up</h2>
           <p className="text-muted-foreground max-w-sm text-sm">

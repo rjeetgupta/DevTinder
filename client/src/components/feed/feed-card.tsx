@@ -73,7 +73,7 @@ export function FeedCard({ user }: { user: User }) {
 
   return (
     <>
-      <Card className="w-full max-w-sm overflow-hidden p-0">
+      <Card className="w-full max-w-sm overflow-hidden p-0 transition-all duration-300 ease-out hover:scale-[1.02] hover:border-white/15 hover:shadow-[0_10px_15px_rgba(0,0,0,0.3)]">
         <button
           type="button"
           onClick={() => setDetailsOpen(true)}
@@ -85,7 +85,7 @@ export function FeedCard({ user }: { user: User }) {
             )}
             <Avatar
               className={`size-28 ring-2 ring-offset-2 ring-offset-transparent ${
-                user.isPremium ? "ring-secondary" : "ring-primary/50"
+                user.isPremium ? "ring-primary ring-offset-background shadow-[0_0_16px_rgba(245,158,11,0.35)]" : "ring-primary/50"
               }`}
             >
               <AvatarImage src={user.photo ?? undefined} alt={user.firstName} />
@@ -168,7 +168,7 @@ export function FeedCard({ user }: { user: User }) {
             <div className="flex flex-col items-center gap-3">
               <Avatar
                 className={`size-24 ring-2 ring-offset-2 ring-offset-transparent ${
-                  user.isPremium ? "ring-secondary" : "ring-primary/50"
+                  user.isPremium ? "ring-primary ring-offset-background shadow-[0_0_16px_rgba(245,158,11,0.35)]" : "ring-primary/50"
                 }`}
               >
                 <AvatarImage src={user.photo ?? undefined} alt={user.firstName} />

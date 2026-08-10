@@ -40,7 +40,7 @@ export function AvatarUploader({
   };
 
   return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-white/15 bg-white/5 p-6">
+    <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/15 bg-white/5 p-6">
       <div className="group relative">
         <Avatar className="ring-primary/50 size-24 ring-2 ring-offset-2 ring-offset-transparent">
           <AvatarImage src={preview ?? undefined} alt="Profile photo preview" />

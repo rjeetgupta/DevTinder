@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-import { extractErrorMessage } from "@/services/api/ApiClient";
+import { getErrorMessage } from "@/services/api/ApiClient";
 import { matchService } from "@/services/api/MatchService";
 import type { User } from "@/types";
 
@@ -16,13 +16,19 @@ const initialState: ConnectionState = {
   error: null,
 };
 
+function unwrapArray<T>(res: unknown): T[] {
+  const data = res as { data?: T[] } | T[];
+  return Array.isArray(data) ? data : data?.data ?? [];
+}
+
 export const fetchConnections = createAsyncThunk<User[], void, { rejectValue: string }>(
   "connections/fetch",
   async (_, { rejectWithValue }) => {
     try {
-      return await matchService.getConnections();
+      const res = await matchService.getConnections();
+      return unwrapArray<User>(res);
     } catch (error) {
-      return rejectWithValue(extractErrorMessage(error, "Could not load your connections."));
+      return rejectWithValue(getErrorMessage(error, "Could not load your connections."));
     }
   }
 );

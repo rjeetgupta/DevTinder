@@ -25,7 +25,7 @@ export function Topbar({
   onLogout?: () => void;
 }) {
   return (
-    <header className="glass flex h-16 shrink-0 items-center justify-between gap-4 rounded-xl px-4">
+    <header className="glass flex h-16 shrink-0 items-center justify-between gap-4 rounded-lg px-4">
       <span className="text-h3 hidden sm:block">DevTinder</span>
 
       <div className="ml-auto flex items-center gap-3">

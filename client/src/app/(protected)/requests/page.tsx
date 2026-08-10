@@ -16,7 +16,7 @@ function ListSkeleton() {
   return (
     <div className="flex flex-col gap-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="glass flex items-center gap-4 rounded-xl p-4">
+        <div key={i} className="glass flex items-center gap-4 rounded-lg p-4">
           <Skeleton className="size-14 rounded-full" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-40" />
@@ -34,7 +34,7 @@ function EmptyState({ icon: Icon, title, description }: {
   description: string;
 }) {
   return (
-    <div className="glass flex flex-col items-center gap-3 rounded-xl p-16 text-center">
+    <div className="glass flex flex-col items-center gap-3 rounded-lg p-16 text-center">
       <Icon className="text-primary size-10" />
       <h2 className="text-h3">{title}</h2>
       <p className="text-muted-foreground max-w-sm text-sm">{description}</p>

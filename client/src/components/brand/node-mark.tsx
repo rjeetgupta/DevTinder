@@ -30,8 +30,8 @@ export function NodeMark({ className }: { className?: string }) {
           y2="9"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="oklch(0.62 0.19 293)" />
-          <stop offset="1" stopColor="oklch(0.72 0.16 30)" />
+          <stop stopColor="#F59E0B" />
+          <stop offset="1" stopColor="#FBBF24" />
         </linearGradient>
       </defs>
     </svg>

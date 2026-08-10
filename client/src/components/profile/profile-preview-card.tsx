@@ -42,7 +42,7 @@ export function ProfilePreviewCard({ data }: { data: ProfilePreviewData }) {
       <CardContent className="flex flex-col items-center gap-4 text-center">
         <Avatar
           className={`size-28 ring-2 ring-offset-2 ring-offset-transparent ${
-            data.isPremium ? "ring-secondary" : "ring-primary/50"
+            data.isPremium ? "ring-primary ring-offset-background shadow-[0_0_16px_rgba(245,158,11,0.35)]" : "ring-primary/50"
           }`}
         >
           <AvatarImage src={data.photoPreview ?? undefined} alt={data.firstName} />

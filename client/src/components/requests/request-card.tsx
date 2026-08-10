@@ -52,7 +52,7 @@ export function RequestCard({ request }: { request: ConnectionRequest }) {
       >
         <Avatar
           className={`size-14 shrink-0 ring-2 ring-offset-2 ring-offset-transparent ${
-            fromUser.isPremium ? "ring-secondary" : "ring-primary/50"
+            fromUser.isPremium ? "ring-primary ring-offset-background shadow-[0_0_16px_rgba(245,158,11,0.35)]" : "ring-primary/50"
           }`}
         >
           <AvatarImage src={fromUser.photo ?? undefined} alt={fromUser.firstName} />
@@ -62,7 +62,7 @@ export function RequestCard({ request }: { request: ConnectionRequest }) {
         <div className="min-w-0 flex-1">
           <h3 className="flex items-center gap-1.5 font-semibold">
             {fromUser.firstName} {fromUser.lastName}
-            {fromUser.isPremium && <BadgeCheck className="text-secondary size-4 shrink-0" />}
+            {fromUser.isPremium && <BadgeCheck className="text-primary size-4 shrink-0" />}
             {fromUser.age ? (
               <span className="text-muted-foreground text-sm font-normal">({fromUser.age})</span>
             ) : null}

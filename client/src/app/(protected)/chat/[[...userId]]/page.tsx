@@ -17,7 +17,7 @@ export default function ChatPage({
   const activeUserId = userId?.[0];
 
   return (
-    <div className="glass flex h-full overflow-hidden rounded-xl">
+    <div className="glass flex h-full overflow-hidden rounded-lg">
       <div
         className={`w-full border-r border-white/10 sm:w-1/3 lg:w-1/4 ${
           activeUserId ? "hidden sm:block" : "block"

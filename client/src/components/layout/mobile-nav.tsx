@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export function MobileNav({ activeHref }: { activeHref?: string }) {
   return (
     <nav
-      className="glass fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-xl px-1 py-2 md:hidden"
+      className="glass fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-lg px-1 py-2 md:hidden"
       aria-label="Primary"
     >
       {NAV_ITEMS.map((item) => {
