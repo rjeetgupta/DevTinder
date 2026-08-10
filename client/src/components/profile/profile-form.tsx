@@ -6,6 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Globe, Loader2 } from "lucide-react";
 import { FaGithub, FaLinkedin, FaXTwitter } from "react-icons/fa6";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { AvatarUploader } from "@/components/profile/avatar-uploader";
 import { ProfilePreviewCard } from "@/components/profile/profile-preview-card";
@@ -27,10 +28,24 @@ import {
   GENDER_OPTIONS,
   STATE_OPTIONS,
 } from "@/lib/constants/profile-options";
-import { editProfileSchema, type ProfileFormValues } from "@/lib/validation/profileSchemas";
+import { editProfileSchema } from "@/lib/validation/profileSchemas";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { editProfile } from "@/store/slices/authSlice";
 import type { User } from "@/types";
+
+/**
+ * editProfileSchema models the API payload (nested `location: {state, country}`),
+ * which is correct for UserService.editProfile. This form edits state/country as
+ * flat fields, so it needs its own flat schema instead of reusing that type.
+ */
+const profileFormSchema = editProfileSchema
+  .omit({ location: true })
+  .extend({
+    state: z.string().min(1, { error: "State is required" }).optional(),
+    country: z.string().optional(),
+  });
+
+type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 function toDefaultValues(user: User | null): ProfileFormValues {
   return {
@@ -66,7 +81,7 @@ export function ProfileForm() {
     watch,
     formState: { errors },
   } = useForm<ProfileFormValues>({
-    resolver: zodResolver(editProfileSchema),
+    resolver: zodResolver(profileFormSchema),
     defaultValues: toDefaultValues(user),
     mode: "onChange",
   });
@@ -83,7 +98,7 @@ export function ProfileForm() {
         bio: data.bio,
         experienceLevel: data.experienceLevel || null,
         skills: data.skills,
-        location: { state: data.state, country: data.country ?? "India" },
+        location: { state: data.state ?? "", country: data.country ?? "India" },
         photo: photoFile,
         githubUrl: data.githubUrl || null,
         linkedinUrl: data.linkedinUrl || null,
@@ -229,7 +244,9 @@ export function ProfileForm() {
                 <Controller
                   control={control}
                   name="skills"
-                  render={({ field }) => <SkillsPicker value={field.value} onChange={field.onChange} />}
+                  render={({ field }) => (
+                    <SkillsPicker value={field.value ?? []} onChange={field.onChange} />
+                  )}
                 />
               </div>
               <div className="grid gap-1.5">
@@ -303,7 +320,7 @@ export function ProfileForm() {
             lastName: formValues.lastName,
             age: formValues.age,
             bio: formValues.bio,
-            skills: formValues.skills,
+            skills: formValues.skills ?? [],
             state: formValues.state,
             photoPreview,
             isPremium: user?.isPremium,

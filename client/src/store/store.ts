@@ -16,7 +16,7 @@ const rootReducer = combineReducers({
   connections: connectionReducer,
   chat: chatReducer,
   premium: premiumReducer,
-  aiReducer: aiReducer,
+  ai: aiReducer,
 });
 
 export const makeStore = () => {
