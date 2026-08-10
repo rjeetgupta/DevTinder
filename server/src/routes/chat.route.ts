@@ -9,9 +9,9 @@ import {
 
 const router: Router = Router();
 
-router.route("/chat/unread-count").get(verifyJWT, getUnreadCount);
-router.route("/chat/list").get(verifyJWT, getChatList);
-router.route("/chat/is-connected/:targetUserId").get(verifyJWT, checkChatIsConnected);
-router.route("/chat/:targetUserId").get(verifyJWT, getChatHistory);
+router.route("/unread-count").get(verifyJWT, getUnreadCount);
+router.route("/list").get(verifyJWT, getChatList);
+router.route("/is-connected/:targetUserId").get(verifyJWT, checkChatIsConnected);
+router.route("/:targetUserId").get(verifyJWT, getChatHistory);
 
 export default router;

@@ -17,7 +17,7 @@ import {
 
 const router: Router = Router();
 
-router.route("/signup").post(validate(signupSchema), signupUser);
+router.route("/register").post(validate(signupSchema), signupUser);
 router.route("/login").post(validate(loginSchema), loginUser);
 router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/forgot-password").post(validate(forgotPasswordSchema), forgotPassword);
