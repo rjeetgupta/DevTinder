@@ -30,7 +30,7 @@ const initialState: ChatState = {
 // the service used to unwrap internally.
 function unwrapList(res: unknown): ChatListItem[] {
   const data = res as { data?: ChatListItem[] } | ChatListItem[];
-  return Array.isArray(data) ? data : data?.data ?? [];
+  return Array.isArray(data) ? data : (data?.data ?? []);
 }
 
 function unwrapMessages(res: unknown): ChatMessage[] {
@@ -38,41 +38,44 @@ function unwrapMessages(res: unknown): ChatMessage[] {
   return data?.data?.messages ?? data?.messages ?? [];
 }
 
-export const fetchChatList = createAsyncThunk<ChatListItem[], void, { rejectValue: string }>(
-  "chat/fetchList",
-  async (_, { rejectWithValue }) => {
-    try {
-      const res = await chatService.getChatList();
-      return unwrapList(res);
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, "Could not load your chats."));
-    }
+export const fetchChatList = createAsyncThunk<
+  ChatListItem[],
+  void,
+  { rejectValue: string }
+>("chat/fetchList", async (_, { rejectWithValue }) => {
+  try {
+    const res = await chatService.getChatList();
+    return unwrapList(res);
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error, "Could not load your chats."));
   }
-);
+});
 
-export const fetchChatHistory = createAsyncThunk<ChatMessage[], string, { rejectValue: string }>(
-  "chat/fetchHistory",
-  async (targetUserId, { rejectWithValue }) => {
-    try {
-      const res = await chatService.getChatHistory(targetUserId);
-      return unwrapMessages(res);
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, "Could not load this conversation."));
-    }
+export const fetchChatHistory = createAsyncThunk<
+  ChatMessage[],
+  string,
+  { rejectValue: string }
+>("chat/fetchHistory", async (targetUserId, { rejectWithValue }) => {
+  try {
+    const res = await chatService.getChatHistory(targetUserId);
+    return unwrapMessages(res);
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error, "Could not load this conversation."));
   }
-);
+});
 
 /** Used by the "Connect" button inside a chat's user-detail dialog. */
-export const sendConnectionRequestFromChat = createAsyncThunk<void, string, { rejectValue: string }>(
-  "chat/sendConnectionRequest",
-  async (targetUserId, { rejectWithValue }) => {
-    try {
-      await matchService.sendRequest("intrested", targetUserId);
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, "Unable to connect."));
-    }
+export const sendConnectionRequestFromChat = createAsyncThunk<
+  void,
+  string,
+  { rejectValue: string }
+>("chat/sendConnectionRequest", async (targetUserId, { rejectWithValue }) => {
+  try {
+    await matchService.sendRequest("intrested", targetUserId);
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error, "Unable to connect."));
   }
-);
+});
 
 const chatSlice = createSlice({
   name: "chat",
@@ -92,26 +95,46 @@ const chatSlice = createSlice({
     /** Called from the `receiveMessage` socket event. */
     messageReceived(
       state,
-      action: PayloadAction<{ senderId: string; text: string; createdAt?: string; _id?: string }>
+      action: PayloadAction<{
+        senderId: string;
+        text: string;
+        createdAt?: string;
+        _id?: string;
+        conversationUserId: string;
+      }>
     ) {
-      const { senderId, text, createdAt, _id } = action.payload;
-      const isActiveChat = state.activeUserId === senderId;
+      const { senderId, text, createdAt, _id, conversationUserId } = action.payload;
+
+      const isActiveChat = state.activeUserId === conversationUserId;
 
       if (isActiveChat) {
-        state.messages.push({ _id, senderId, text, createdAt, seen: false });
+        state.messages.push({
+          _id,
+          senderId,
+          text,
+          createdAt,
+          seen: false,
+        });
       }
 
-      const existing = state.list.find((c) => c.user._id === senderId);
+      const existing = state.list.find((c) => c.user._id === conversationUserId);
+
       if (existing) {
         existing.lastMessage = text;
         existing.lastMessageAt = createdAt ?? new Date().toISOString();
-        if (!isActiveChat) existing.unreadCount += 1;
+
+        // Only incoming messages increase unread count.
+        if (senderId !== conversationUserId && !isActiveChat) {
+          existing.unreadCount += 1;
+        }
       }
     },
     /** Called from the `messagesSeen` socket event — marks our own sent messages as read. */
-    ownMessagesMarkedSeen(state) {
-      state.messages = state.messages.map((m) =>
-        m.senderId !== state.activeUserId ? m : { ...m, seen: true }
+    ownMessagesMarkedSeen(state, action: PayloadAction<{ currentUserId: string }>) {
+      const { currentUserId } = action.payload;
+
+      state.messages = state.messages.map((message) =>
+        message.senderId === currentUserId ? { ...message, seen: true } : message
       );
     },
   },
@@ -144,5 +167,6 @@ const chatSlice = createSlice({
   },
 });
 
-export const { setActiveUserId, messageReceived, ownMessagesMarkedSeen } = chatSlice.actions;
+export const { setActiveUserId, messageReceived, ownMessagesMarkedSeen } =
+  chatSlice.actions;
 export default chatSlice.reducer;

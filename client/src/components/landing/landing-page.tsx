@@ -68,11 +68,11 @@ export function LandingPage() {
     <div className="relative min-h-screen overflow-x-hidden">
       <div className="noise-overlay" aria-hidden />
       <div
-        className="ambient-orb -top-32 left-1/2 h-[400px] w-[400px] -translate-x-1/2 md:h-[600px] md:w-[600px]"
+        className="ambient-orb -top-32 left-1/2 h-100 w-100 -translate-x-1/2 md:h-150 md:w-150"
         aria-hidden
       />
       <div
-        className="ambient-orb top-[60vh] -right-40 h-[350px] w-[350px] md:h-[500px] md:w-[500px]"
+        className="ambient-orb top-[60vh] -right-40 h-87.5 w-87.5 md:h-125 md:w-125"
         aria-hidden
       />
 

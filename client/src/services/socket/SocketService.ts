@@ -35,6 +35,18 @@ export class SocketService {
   connect(): Socket<ServerToClientEvents, ClientToServerEvents> {
     if (!this.socket) {
       this.socket = io(env.socketUrl, { withCredentials: true });
+
+      this.socket.on("connect", () => {
+        console.log("🟢 Socket connected:", this.socket?.id);
+      });
+
+      this.socket.on("disconnect", (reason) => {
+        console.log("🔴 Socket disconnected:", reason);
+      });
+
+      this.socket.on("connect_error", (error) => {
+        console.error("❌ Socket connection error:", error.message);
+      });
     }
     return this.socket;
   }

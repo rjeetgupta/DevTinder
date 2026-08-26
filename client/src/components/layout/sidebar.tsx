@@ -69,7 +69,7 @@ export function Sidebar({
               )}
             >
               <Icon
-                className="size-[18px]"
+                className="size-4.5"
                 strokeWidth={1.5}
                 aria-hidden
               />

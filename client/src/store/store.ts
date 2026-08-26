@@ -7,6 +7,7 @@ import requestReducer from "./slices/requestSlice";
 import chatReducer from "./slices/chatSlice";
 import premiumReducer from "./slices/premiumSlice";
 import aiReducer from "./slices/aiSlice";
+import userStatusReducer  from "./slices/userStatusSlice";
 
 
 const rootReducer = combineReducers({
@@ -17,6 +18,7 @@ const rootReducer = combineReducers({
   chat: chatReducer,
   premium: premiumReducer,
   ai: aiReducer,
+  userStatus: userStatusReducer,
 });
 
 export const makeStore = () => {

@@ -18,12 +18,12 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative mx-auto flex h-screen max-w-7xl gap-4 overflow-hidden p-4">
+    <div className="relative w-full mx-auto flex h-screen max-w-7xl gap-4 overflow-hidden p-4">
       <div
-        className="ambient-orb -top-40 left-1/3 z-0 h-[400px] w-[400px] md:h-[600px] md:w-[600px]"
+        className="ambient-orb -top-40 left-1/3 z-0 h-100 w-100 md:h-150 md:w-150"
         aria-hidden
       />
-      <div className="relative z-10 flex h-full w-full gap-4">
+      <div className="relative z-10 flex h-full w-full min-w-0 gap-4">
         <Sidebar activeHref={activeHref} />
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <Topbar

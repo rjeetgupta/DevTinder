@@ -24,19 +24,25 @@ import type { User } from "@/types";
 
 function formatTime(dateString?: string) {
   if (!dateString) return "";
-  return new Date(dateString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return new Date(dateString).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function ChatWindow({ targetUserId }: { targetUserId: string }) {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.user);
   const { messages, messagesStatus } = useAppSelector((state) => state.chat);
+  const isOnline = useAppSelector(
+    (state) => state.userStatus.onlineUsers[targetUserId] ?? false
+  );
 
   const [targetUser, setTargetUser] = useState<User | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<"unknown" | "connected" | "not_connected">(
-    "unknown"
-  );
-  const [isOnline, setIsOnline] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<
+    "unknown" | "connected" | "not_connected"
+  >("unknown");
+  // const [isOnline, setIsOnline] = useState(true);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -78,25 +84,35 @@ export function ChatWindow({ targetUserId }: { targetUserId: string }) {
   // Socket lifecycle: announce presence, join/leave the room, wire listeners.
   useEffect(() => {
     if (!currentUser?._id) return;
-    socketService.announceOnline(currentUser._id);
+
     socketService.joinChat(currentUser._id, targetUserId);
 
-    const offStatus = socketService.onUserStatus(({ userId, online }) => {
-      if (userId === targetUserId) setIsOnline(online);
-    });
     const offMessage = socketService.onReceiveMessage((msg) => {
-      dispatch(messageReceived(msg));
+      dispatch(
+        messageReceived({
+          ...msg,
+          conversationUserId: targetUserId,
+        })
+      );
+
       if (msg.senderId !== currentUser._id) {
         socketService.markSeen(currentUser._id, targetUserId);
       }
     });
+
     const offSeen = socketService.onMessagesSeen(() => {
-      dispatch(ownMessagesMarkedSeen());
+      if (!currentUser?._id) return;
+
+      dispatch(
+        ownMessagesMarkedSeen({
+          currentUserId: currentUser._id,
+        })
+      );
     });
 
     return () => {
       socketService.leaveChat(currentUser._id, targetUserId);
-      offStatus();
+
       offMessage();
       offSeen();
     };
@@ -123,10 +139,11 @@ export function ChatWindow({ targetUserId }: { targetUserId: string }) {
   };
 
   const initials =
-    `${targetUser?.firstName?.[0] ?? ""}${targetUser?.lastName?.[0] ?? ""}`.toUpperCase() || "?";
+    `${targetUser?.firstName?.[0] ?? ""}${targetUser?.lastName?.[0] ?? ""}`.toUpperCase() ||
+    "?";
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full w-full flex-col">
       <button
         type="button"
         onClick={() => setDetailsOpen(true)}
@@ -134,7 +151,10 @@ export function ChatWindow({ targetUserId }: { targetUserId: string }) {
       >
         <div className="relative">
           <Avatar className="size-10">
-            <AvatarImage src={targetUser?.photo ?? undefined} alt={targetUser?.firstName} />
+            <AvatarImage
+              src={targetUser?.photo ?? undefined}
+              alt={targetUser?.firstName}
+            />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           {isOnline && (
@@ -145,7 +165,9 @@ export function ChatWindow({ targetUserId }: { targetUserId: string }) {
           <p className="text-sm font-semibold">
             {targetUser?.firstName} {targetUser?.lastName}
           </p>
-          <p className="text-muted-foreground text-xs">{isOnline ? "Active now" : "Offline"}</p>
+          <p className="text-muted-foreground text-xs">
+            {isOnline ? "Active now" : "Offline"}
+          </p>
         </div>
       </button>
 
@@ -168,15 +190,18 @@ export function ChatWindow({ targetUserId }: { targetUserId: string }) {
           {messages.map((msg, idx) => {
             const isMe = msg.senderId === currentUser?._id;
             return (
-              <div key={msg._id ?? idx} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+              <div
+                key={msg._id ?? idx}
+                className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+              >
                 <div
                   className={
                     isMe
                       ? "brand-gradient text-primary-foreground max-w-[75%] rounded-l-2xl rounded-tr-2xl px-4 py-2 text-sm shadow-sm"
-                      : "glass max-w-[75%] rounded-r-2xl rounded-tl-2xl px-4 py-2 text-sm"
+                      : "glass max-w-[75%] rounded-tl-2xl rounded-r-2xl px-4 py-2 text-sm"
                   }
                 >
-                  <p className="leading-relaxed wrap-break-words">{msg.text}</p>
+                  <p className="wrap-break-words leading-relaxed">{msg.text}</p>
                   <div
                     className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
                       isMe ? "text-primary-foreground/70" : "text-muted-foreground"
@@ -185,7 +210,7 @@ export function ChatWindow({ targetUserId }: { targetUserId: string }) {
                     {formatTime(msg.createdAt)}
                     {isMe &&
                       (msg.seen ? (
-                        <CheckCheck className="size-3.5" />
+                        <CheckCheck className="size-3.5 text-neutral-100" />
                       ) : (
                         <Check className="size-3.5" />
                       ))}
@@ -205,9 +230,14 @@ export function ChatWindow({ targetUserId }: { targetUserId: string }) {
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder="Type a message…"
-            className="rounded-full"
+            className="flex-1 rounded-full"
           />
-          <Button size="icon" disabled={!draft.trim()} onClick={handleSend} aria-label="Send">
+          <Button
+            size="icon"
+            disabled={!draft.trim()}
+            onClick={handleSend}
+            aria-label="Send"
+          >
             <Send className="size-4" />
           </Button>
         </div>
