@@ -56,6 +56,9 @@ export const reviewConnectionRequest = asyncHandler(async (req: Request, res: Re
     const requestId = req.params.requestId as string;
     const status = req.params.status as string;
 
+    console.log("Request body : ", req.body)
+    console.log("Params body : ", req.params)
+
     const allowedStatus: string[] = [CONNECTION_STATUS.ACCEPTED, CONNECTION_STATUS.REJECTED];
     if (!allowedStatus.includes(status)) {
         throw new ApiError(400, "Status not allowed!");

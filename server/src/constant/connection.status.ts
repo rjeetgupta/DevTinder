@@ -8,7 +8,7 @@
 export const CONNECTION_STATUS = {
     INTERESTED: "intrested",
     IGNORED: "ignored",
-    ACCEPTED: "accepeted",
+    ACCEPTED: "accepted",
     REJECTED: "rejected",
 } as const;
 
