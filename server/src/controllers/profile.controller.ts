@@ -71,8 +71,11 @@ export const editProfile = asyncHandler(async (req: Request, res: Response) => {
     }
 
     if (req.body.location) {
-        if (typeof req.body.location !== "object" || !req.body.location.state || !req.body.location.country) {
-            throw new ApiError(400, "Location must include both state and country");
+        if (
+            typeof req.body.location !== "object" ||
+            !req.body.location.country
+        ) {
+            throw new ApiError(400, "Location must include country");
         }
     }
 

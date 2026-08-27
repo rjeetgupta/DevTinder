@@ -32,13 +32,13 @@ import chatRoutes from "./routes/chat.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 import geminiRoutes from "./routes/gemini.route.js";
 
-app.use("/api/v1/auth", authRoutes); // /api/login, /api/signup
-app.use("/api/v1/profile", profileRoutes); // /api/profile/view
-app.use("/api/v1", requestRoutes); // /api/request/send/:status/:toUserId
-app.use("/api/v1/user", userRoutes); // /api/user/feed
-app.use("/api/v1/chat", chatRoutes); // /api/chat/:targetUserId
-app.use("/api/v1/payment", paymentRoutes); // /api/payment/create
-app.use("/api/v1/gemini", geminiRoutes); // /api/gemini/suggest-courses
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/profile", profileRoutes);
+app.use("/api/v1", requestRoutes);
+app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/chat", chatRoutes);
+app.use("/api/v1/payment", paymentRoutes);
+app.use("/api/v1/gemini", geminiRoutes);
 
 app.get("/health", (_req, res) => {
     res.status(200).json({
