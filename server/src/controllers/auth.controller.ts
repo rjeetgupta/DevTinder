@@ -7,10 +7,10 @@ import User from "../models/user.model.js";
 import { sendMail } from "../utils/mailer.js";
 
 const cookieOptions = {
-    httpOnly: true,
-    secure: false, // must stay false on plain HTTP, even in production
-    sameSite: "lax" as const,
-};
+	httpOnly: true,
+	secure: process.env.NODE_ENV === "production",
+	sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+} as const;
 
 // Signup
 export const signupUser = asyncHandler(async (req: Request, res: Response) => {
