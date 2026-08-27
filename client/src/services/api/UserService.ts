@@ -1,11 +1,5 @@
 import { apiClient, extractErrorMessage } from "./ApiClient";
 import type { UserLocation } from "@/types";
-// TODO: point this at your real schema — placeholder based on
-// EditProfilePayload shape. Replace once confirmed. Note: the schema
-// should validate the plain fields only; `photo` (a File) is appended
-// to FormData separately below and isn't something Zod validates here
-// (do file-type/size checks at the input `<input type="file">` layer
-// if not already done there).
 import { editProfileSchema } from "@/lib/validation/profileSchemas";
 
 export interface EditProfilePayload {
@@ -52,7 +46,7 @@ export class UserService {
     if (data.lastName) formData.append("lastName", data.lastName);
     if (data.age) formData.append("age", String(data.age));
     if (data.gender) formData.append("gender", data.gender);
-    formData.append("bio", data.bio);
+    formData.append("bio", data.bio ?? "");
     if (data.experienceLevel) formData.append("experienceLevel", data.experienceLevel);
 
     // Backend expects these two JSON-stringified, matching the original client.

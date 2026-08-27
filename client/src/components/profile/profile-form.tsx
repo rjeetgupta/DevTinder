@@ -26,19 +26,21 @@ import {
   GENDER_OPTIONS,
   STATE_OPTIONS,
 } from "@/lib/constants/profile-options";
-import { editProfileSchema, ProfileFormValues } from "@/lib/validation/profileSchemas";
+import { 
+  editProfileSchema, 
+  type ProfileFormValues,
+} from "@/lib/validation/profileSchemas";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { editProfile } from "@/store/slices/authSlice";
 import type { User } from "@/types";
-
 
 function toDefaultValues(user: User | null): ProfileFormValues {
   return {
     firstName: user?.firstName ?? "",
     lastName: user?.lastName ?? "",
-    age: user?.age != null ? Number(user.age) : undefined,
+    age: user?.age != undefined ? Number(user.age) : undefined,
     gender: user?.gender ?? "",
-    experienceLevel: user?.experienceLevel ?? "fresher",
+    experienceLevel: user?.experienceLevel ?? "",
     bio: user?.bio ?? "",
     skills: user?.skills ?? [],
     location: {
@@ -59,7 +61,10 @@ export function ProfileForm() {
   const isSubmitting = status === "loading";
 
   const [photoFile, setPhotoFile] = useState<File | undefined>(undefined);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(user?.photo ?? null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(
+    user?.photo ?? null
+  );
+
 
   const {
     register,
@@ -75,19 +80,21 @@ export function ProfileForm() {
 
   const formValues = watch();
 
+  // ✅ OFFICIAL PATTERN: Just accept data, no need for validation again
   const onSubmit = async (data: ProfileFormValues) => {
+    // data is already validated by zodResolver
     const result = await dispatch(
       editProfile({
         firstName: data.firstName,
         lastName: data.lastName || undefined,
-        age: data.age ?? undefined,
+        age: data.age,
         gender: data.gender || undefined,
         bio: data.bio ?? "",
-        experienceLevel: data.experienceLevel || null,
-        skills: data.skills,
+        experienceLevel: data.experienceLevel || undefined,
+        skills: data.skills ?? [],
         location: {
-          state: data.location?.state ?? "",
-          country: data.location?.country ?? "India",
+          state: data.location.state ?? "",
+          country: data.location.country ?? "India",
         },
         photo: photoFile,
         githubUrl: data.githubUrl || undefined,
@@ -117,7 +124,9 @@ export function ProfileForm() {
 
         <div className="flex flex-col gap-8">
           <AvatarUploader
-            initialsFallback={`${user?.firstName?.[0] ?? ""}${user?.lastName?.[0] ?? ""}`.toUpperCase()}
+            initialsFallback={`${user?.firstName?.[0] ?? ""}${
+              user?.lastName?.[0] ?? ""
+            }`.toUpperCase()}
             existingPhoto={user?.photo}
             onFileSelected={(file, preview) => {
               setPhotoFile(file);
@@ -140,19 +149,28 @@ export function ProfileForm() {
                 <Label htmlFor="firstName">First name</Label>
                 <Input id="firstName" {...register("firstName")} />
                 {errors.firstName && (
-                  <p className="text-destructive text-xs">{errors.firstName.message}</p>
+                  <p className="text-destructive text-xs">
+                    {errors.firstName.message}
+                  </p>
                 )}
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="lastName">Last name</Label>
                 <Input id="lastName" {...register("lastName")} />
                 {errors.lastName && (
-                  <p className="text-destructive text-xs">{errors.lastName.message}</p>
+                  <p className="text-destructive text-xs">
+                    {errors.lastName.message}
+                  </p>
                 )}
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="age">Age</Label>
-                <Input id="age" type="number" {...register("age")} />
+                {/* ✅ OFFICIAL: Use valueAsNumber: true for number inputs */}
+                <Input 
+                  id="age" 
+                  type="number" 
+                  {...register("age", { valueAsNumber: true })}
+                />
                 {errors.age && (
                   <p className="text-destructive text-xs">{errors.age.message}</p>
                 )}
@@ -163,7 +181,7 @@ export function ProfileForm() {
                   control={control}
                   name="gender"
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select value={field.value || ""} onValueChange={field.onChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
@@ -184,7 +202,7 @@ export function ProfileForm() {
                   control={control}
                   name="location.state"
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select value={field.value || ""} onValueChange={field.onChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
@@ -200,7 +218,7 @@ export function ProfileForm() {
                 />
                 {errors.location?.state && (
                   <p className="text-destructive text-xs">
-                    {errors.location?.state.message}
+                    {errors.location.state.message}
                   </p>
                 )}
               </div>
@@ -220,7 +238,7 @@ export function ProfileForm() {
                   control={control}
                   name="experienceLevel"
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select value={field.value || ""} onValueChange={field.onChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select level" />
                       </SelectTrigger>
@@ -271,7 +289,9 @@ export function ProfileForm() {
                 </Label>
                 <Input placeholder="https://github.com/…" {...register("githubUrl")} />
                 {errors.githubUrl && (
-                  <p className="text-destructive text-xs">{errors.githubUrl.message}</p>
+                  <p className="text-destructive text-xs">
+                    {errors.githubUrl.message}
+                  </p>
                 )}
               </div>
               <div className="grid gap-1.5">
@@ -283,7 +303,9 @@ export function ProfileForm() {
                   {...register("linkedinUrl")}
                 />
                 {errors.linkedinUrl && (
-                  <p className="text-destructive text-xs">{errors.linkedinUrl.message}</p>
+                  <p className="text-destructive text-xs">
+                    {errors.linkedinUrl.message}
+                  </p>
                 )}
               </div>
               <div className="grid gap-1.5">
@@ -292,7 +314,9 @@ export function ProfileForm() {
                 </Label>
                 <Input placeholder="https://twitter.com/…" {...register("twitterUrl")} />
                 {errors.twitterUrl && (
-                  <p className="text-destructive text-xs">{errors.twitterUrl.message}</p>
+                  <p className="text-destructive text-xs">
+                    {errors.twitterUrl.message}
+                  </p>
                 )}
               </div>
               <div className="grid gap-1.5">
@@ -323,17 +347,17 @@ export function ProfileForm() {
         <ProfilePreviewCard
           data={{
             firstName: formValues.firstName,
-            lastName: formValues.lastName,
-            age: formValues.age,
-            bio: formValues.bio,
+            lastName: formValues.lastName ?? "",
+            age: formValues.age ?? undefined,
+            bio: formValues.bio ?? "",
             skills: formValues.skills ?? [],
-            state: formValues.location?.state ?? "",
+            state: formValues.location.state ?? "",
             photoPreview,
             isPremium: user?.isPremium,
-            githubUrl: formValues.githubUrl,
-            linkedinUrl: formValues.linkedinUrl,
-            twitterUrl: formValues.twitterUrl,
-            portfolioUrl: formValues.portfolioUrl,
+            githubUrl: formValues.githubUrl ?? "",
+            linkedinUrl: formValues.linkedinUrl ?? "",
+            twitterUrl: formValues.twitterUrl ?? "",
+            portfolioUrl: formValues.portfolioUrl ?? "",
           }}
         />
       </div>
