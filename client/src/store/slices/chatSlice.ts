@@ -33,9 +33,34 @@ function unwrapList(res: unknown): ChatListItem[] {
   return Array.isArray(data) ? data : (data?.data ?? []);
 }
 
+
 function unwrapMessages(res: unknown): ChatMessage[] {
-  const data = res as { data?: { messages?: ChatMessage[] }; messages?: ChatMessage[] };
-  return data?.data?.messages ?? data?.messages ?? [];
+  const data = res as {
+    chat?: {
+      messages?: Array<{
+        _id?: string;
+        senderId:
+          | string
+          | {
+              _id: string;
+            };
+        text: string;
+        seen?: boolean;
+        createdAt?: string;
+      }>;
+    };
+  };
+
+  const messages = data?.chat?.messages ?? [];
+
+  return messages.map((message) => ({
+    _id: message._id,
+    senderId:
+      typeof message.senderId === "string" ? message.senderId : message.senderId._id,
+    text: message.text,
+    seen: message.seen ?? false,
+    createdAt: message.createdAt,
+  }));
 }
 
 export const fetchChatList = createAsyncThunk<
