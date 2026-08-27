@@ -92,7 +92,7 @@ export class UserService {
   async getUserById(userId: string) {
     try {
       const res = await apiClient.get(`/user/${userId}`);
-      return res.data;
+      return res.data.data;
     } catch (error) {
       throw new Error(extractErrorMessage(error, "Unable to load this user."));
     }
