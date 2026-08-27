@@ -20,25 +20,33 @@ export const editProfileSchema = z.object({
     .optional()
     .or(z.literal("")),
 
-  age: z
-    .string()
-    .optional()
-    .refine((v) => !v || (Number(v) >= 18 && Number(v) <= 100), {
-      error: "Age must be between 18 and 100",
-    }),
+  age: z.preprocess(
+    (value) => {
+      if (value === "" || value === null || value === undefined) {
+        return undefined;
+      }
+      return Number(value);
+    },
+    z
+      .number()
+      .min(18, { error: "Age must be between 18 and 100" })
+      .max(100, { error: "Age must be between 18 and 100" })
+      .prefault(18)
+  ),
 
   gender: z.string().optional(),
   experienceLevel: z.string().optional(),
 
   bio: z
     .string()
-    .min(1, { error: "Bio is required" })
-    .max(500, { error: "Max 500 characters" }),
+    .max(500, { error: "Max 500 characters" })
+    .optional()
+    .or(z.literal("")),
 
   skills: z.array(z.string()).optional(),
 
   location: z.object({
-    state: z.string().min(1, { error: "State is required" }).optional(),
+    state: z.string().min(1, { error: "State is required" }).or(z.literal("")),
     country: z.string().optional(),
   }),
 

@@ -141,7 +141,7 @@ export function ChatWindow({ targetUserId }: { targetUserId: string }) {
   const initials =
     `${targetUser?.firstName?.[0] ?? ""}${targetUser?.lastName?.[0] ?? ""}`.toUpperCase() ||
     "?";
-  console.log("TARGET USER : ", targetUser)
+
   return (
     <div className="flex h-full w-full flex-col">
       <button
