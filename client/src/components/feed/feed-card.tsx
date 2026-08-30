@@ -110,7 +110,7 @@ export function FeedCard({ user }: { user: User }) {
           </div>
         </button>
 
-        <CardContent className="flex flex-col gap-3 pt-0">
+        <CardContent className="flex flex-col gap-3 pt-0 pb-2">
           {previewSkills.length > 0 && (
             <div className="flex flex-wrap justify-center gap-1.5">
               {previewSkills.map((name) => (
@@ -127,7 +127,7 @@ export function FeedCard({ user }: { user: User }) {
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="flex justify-between gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -137,10 +137,10 @@ export function FeedCard({ user }: { user: User }) {
               {isPending ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
               Ignore
             </Button>
-            <Button variant="glass" size="sm" onClick={() => setDetailsOpen(true)}>
+            {/*<Button variant="glass" size="sm" onClick={() => setDetailsOpen(true)}>
               <Info className="size-4" />
               Details
-            </Button>
+            </Button>*/}
             <Button size="sm" disabled={isPending} onClick={() => handleSendRequest("intrested")}>
               {isPending ? (
                 <Loader2 className="size-4 animate-spin" />

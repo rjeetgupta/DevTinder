@@ -80,9 +80,7 @@ export function ProfileForm() {
 
   const formValues = watch();
 
-  // ✅ OFFICIAL PATTERN: Just accept data, no need for validation again
   const onSubmit = async (data: ProfileFormValues) => {
-    // data is already validated by zodResolver
     const result = await dispatch(
       editProfile({
         firstName: data.firstName,
@@ -165,7 +163,6 @@ export function ProfileForm() {
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="age">Age</Label>
-                {/* ✅ OFFICIAL: Use valueAsNumber: true for number inputs */}
                 <Input 
                   id="age" 
                   type="number" 

@@ -37,5 +37,4 @@ export const editProfileSchema = z.object({
   portfolioUrl: optionalUrl,
 });
 
-
 export type ProfileFormValues = z.infer<typeof editProfileSchema>;

@@ -76,9 +76,9 @@ export function LandingPage() {
         aria-hidden
       />
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Navigation                                                       */}
-      {/* ---------------------------------------------------------------- */}
+
+      {/* Navigation */}
+
       <header className="sticky top-0 z-50 px-4 pt-4">
         <div className="glass mx-auto flex h-16 w-full max-w-6xl items-center justify-between rounded-lg px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
@@ -146,9 +146,7 @@ export function LandingPage() {
         )}
       </header>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Hero                                                             */}
-      {/* ---------------------------------------------------------------- */}
+      {/* Hero */}
       <section className="relative px-4 pt-20 pb-24 md:pt-28 md:pb-32">
         <NodeField className="text-primary" />
         <div className="relative mx-auto flex max-w-3xl flex-col items-center text-center">
@@ -201,9 +199,8 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* About / product section                                         */}
-      {/* ---------------------------------------------------------------- */}
+      {/* About / product section */}
+      
       <section id="product" className="relative px-4 py-24 md:py-32">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
@@ -242,9 +239,8 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* How it works                                                     */}
-      {/* ---------------------------------------------------------------- */}
+      {/* How it works  */}
+      
       <section id="how-it-works" className="relative px-4 py-24 md:py-32">
         <div className="mx-auto max-w-4xl">
           <div className="mx-auto max-w-2xl text-center">
@@ -286,9 +282,8 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Premium                                                          */}
-      {/* ---------------------------------------------------------------- */}
+      {/* Premium */}
+      
       <section id="premium" className="relative px-4 py-24 md:py-32">
         <div className="mx-auto max-w-5xl">
           <div className="mx-auto max-w-2xl text-center">
@@ -365,9 +360,8 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Closing CTA                                                      */}
-      {/* ---------------------------------------------------------------- */}
+      {/* Closing CTA */}
+      
       <section className="relative px-4 pb-24 md:pb-32">
         <div className="mx-auto max-w-4xl">
           <Card className="glow-border border-primary/20 overflow-hidden">
@@ -390,9 +384,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Footer                                                           */}
-      {/* ---------------------------------------------------------------- */}
+      {/* Footer */}
       <footer className="relative border-t border-border px-4 py-12">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-xs">

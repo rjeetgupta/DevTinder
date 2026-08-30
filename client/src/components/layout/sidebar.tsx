@@ -17,7 +17,7 @@ export const NAV_ITEMS = [
   { label: "Requests", icon: Heart, href: "/requests" },
   { label: "Connections", icon: Users, href: "/connections" },
   { label: "Chat", icon: MessageCircle, href: "/chat" },
-  { label: "AI Coach", icon: Sparkles, href: "/ai-coach" },
+  // { label: "AI Coach", icon: Sparkles, href: "/ai-coach" },
   { label: "Premium", icon: Crown, href: "/premium" },
   { label: "Profile", icon: UserRound, href: "/profile" },
 ] as const;
